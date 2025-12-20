@@ -6,7 +6,7 @@ import { type StartDealParams, startNewDeal } from "../../domain/game";
 import { checkStreetEndCondition } from "../../domain/rules/street";
 import type { Event, GameState } from "../../domain/types";
 import type { AppState, FullStore, UiState } from "../types";
-import { loadAppState, saveAppState, STORAGE_VERSION } from "./persistence";
+import { loadAppState, STORAGE_VERSION, saveAppState } from "./persistence";
 
 export interface AppActions {
   initialize: () => void;
