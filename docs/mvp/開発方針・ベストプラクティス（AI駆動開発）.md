@@ -174,6 +174,11 @@ describe("allowedActions", () => {
 ### AI駆動のコツ
 - 「Biome前提」と伝えると、整形を気にせずロジックに集中できる
 
+### 必須ルール
+- **Clean Commits**: テスト、Lint、Format が全て通る状態でのみコミットすること。
+- **Lint/Format**: `npm run lint` / `npm run format` を定期的（コミット前）に実行する。
+- **Explicit Commits Only**: ユーザーからの明示的な指示があるまでコミットしないこと。
+
 ---
 
 ## 9. Tailwind CSS（追加）
