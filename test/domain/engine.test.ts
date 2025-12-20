@@ -122,8 +122,13 @@ describe("applyEvent", () => {
 
   it("CHECKイベントが正しく処理されること", () => {
     // 4th street, no bet
-    const checkState = { ...initialState, street: "4th" as const, currentBet: 0, pendingResponseCount: 2 };
-    
+    const checkState = {
+      ...initialState,
+      street: "4th" as const,
+      currentBet: 0,
+      pendingResponseCount: 2,
+    };
+
     const checkEvent: Event = {
       id: "e4",
       type: "CHECK",
@@ -138,16 +143,16 @@ describe("applyEvent", () => {
 
   it("STREET_ADVANCEイベントが正しく処理されること", () => {
     // 3rd street end state
-    const endState = { 
-      ...initialState, 
-      pot: 100, 
+    const endState = {
+      ...initialState,
+      pot: 100,
       currentBet: 20,
       raiseCount: 1,
       checksThisStreet: 0,
       players: [
-         { ...initialState.players[0], committedThisStreet: 20 },
-         { ...initialState.players[1], committedThisStreet: 20 },
-      ]
+        { ...initialState.players[0], committedThisStreet: 20 },
+        { ...initialState.players[1], committedThisStreet: 20 },
+      ],
     };
 
     const event: Event = {
