@@ -1,0 +1,76 @@
+import type {
+  DealState,
+  GameState,
+  GameType,
+  PlayerId,
+  RotationRule,
+} from "./types";
+
+export interface StartDealParams {
+  rngSeed: string; // 将来使用
+  seatOrder: PlayerId[];
+}
+
+/**
+ * 現在のディール番号に基づいてゲーム種別を決定する
+ */
+export const getCurrentGameType = (
+  rotation: RotationRule,
+  dealIndex: number,
+): GameType => {
+  const { sequence, dealPerGame } = rotation;
+  if (!sequence.length) return "studHi"; // fallback
+
+  const block = Math.floor(dealIndex / dealPerGame);
+  const idx = block % sequence.length;
+  return sequence[idx];
+};
+
+/**
+ * 新しいディールを開始し、GameState.currentDeal にセットする
+ * (Action適用前に呼ぶ純関数)
+ */
+export const startNewDeal = (
+  game: GameState,
+  params: StartDealParams,
+): GameState => {
+  const gameType = getCurrentGameType(game.rotation, game.dealIndex);
+
+  const newDeal: DealState = {
+    dealId: `deal-${Date.now()}`, // MVP: 簡易生成
+    gameType,
+    playerCount: params.seatOrder.length,
+    players: params.seatOrder.map((pid, i) => {
+      // GamePlayer情報をルックアップ（なければゲスト扱い）
+      const pInfo = game.players.find((p) => p.id === pid);
+      return {
+        seat: i,
+        kind: pInfo ? pInfo.kind : "human",
+        active: true,
+        stack: game.score.stacks[pid] ?? 0, // ※スコアモデルによる。MVPは一旦0開始 or 引き継ぎ
+        committedTotal: 0,
+        committedThisStreet: 0,
+      };
+    }),
+    ante: game.stakes.ante,
+    bringIn: game.stakes.bringIn,
+    smallBet: game.stakes.smallBet,
+    bigBet: game.stakes.bigBet,
+    street: "3rd",
+    bringInIndex: 0, // 仮: カード配布後に決定
+    currentActorIndex: 0, // 仮: カード配布後に決定
+    pot: 0,
+    currentBet: 0,
+    raiseCount: 0,
+    pendingResponseCount: 0, // 後続のDEAL_INITイベント等で計算
+    checksThisStreet: 0,
+    actionsThisStreet: [],
+    dealFinished: false,
+  };
+
+  return {
+    ...game,
+    currentDeal: newDeal,
+    // dealIndexはここでは増やさない（DEAL_ENDで増やす）
+  };
+};
