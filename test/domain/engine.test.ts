@@ -138,13 +138,15 @@ describe("applyEvent", () => {
     };
     const nextState = applyEvent(checkState, checkEvent);
     expect(nextState.checksThisStreet).toBe(1);
-    expect(nextState.pendingResponseCount).toBe(1);
+    // CHECKはcheckフェーズなのでpendingResponseCountは変更しない
+    expect(nextState.pendingResponseCount).toBe(2);
   });
 
   it("STREET_ADVANCEイベントが正しく処理されること", () => {
     // 3rd street end state
     const endState = {
       ...initialState,
+      street: "3rd" as const,
       pot: 100,
       currentBet: 20,
       raiseCount: 1,
@@ -159,12 +161,12 @@ describe("applyEvent", () => {
       id: "e5",
       type: "STREET_ADVANCE",
       seat: null,
-      street: "4th",
+      street: "3rd", // 終了したストリート
       timestamp: Date.now(),
     };
 
     const nextState = applyEvent(endState, event);
-    expect(nextState.street).toBe("4th");
+    expect(nextState.street).toBe("4th"); // 次のストリートに進む
     expect(nextState.pot).toBe(100); // changes nothing directly
     expect(nextState.currentBet).toBe(0);
     expect(nextState.raiseCount).toBe(0);

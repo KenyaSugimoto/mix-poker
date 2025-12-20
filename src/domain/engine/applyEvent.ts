@@ -83,12 +83,19 @@ const handleBetting = (
   draft.pot += actualAdded;
 
   draft.currentBet = event.amount;
-  if (event.type === "RAISE" || event.type === "COMPLETE") {
+
+  // raiseCountの更新
+  if (event.type === "RAISE") {
     draft.raiseCount += 1;
+  } else {
+    // BRING_IN, COMPLETE, BETはraiseCountを0にリセット
+    draft.raiseCount = 0;
   }
 
   // 他のプレイヤーが反応する必要がある人数をリセット（自分以外のアクティブなプレイヤー数）
   draft.pendingResponseCount = draft.players.filter((p) => p.active).length - 1;
+  // 攻撃アクションが発生したのでchecksThisStreetをリセット
+  draft.checksThisStreet = 0;
 };
 
 const handleCall = (draft: Draft<DealState>, event: CallEvent) => {
@@ -106,7 +113,12 @@ const handleCall = (draft: Draft<DealState>, event: CallEvent) => {
 
 const handleFold = (draft: Draft<DealState>, event: FoldEvent) => {
   draft.players[event.seat].active = false;
-  draft.pendingResponseCount -= 1;
+
+  // 攻撃フェーズ（currentBet > 0）の場合のみpendingResponseCountを減らす
+  if (draft.currentBet > 0) {
+    draft.pendingResponseCount -= 1;
+  }
+  // checkフェーズ（currentBet === 0）の場合はchecksThisStreetは増やさない
 
   // 1人しか残っていないかチェック
   const activeCount = draft.players.filter((p) => p.active).length;
@@ -116,19 +128,25 @@ const handleFold = (draft: Draft<DealState>, event: FoldEvent) => {
 };
 
 const handleCheck = (draft: Draft<DealState>, _event: CheckEvent) => {
+  // CHECKはcheckフェーズ（currentBet === 0）でのみ発生するため、
+  // pendingResponseCountは変更しない
   draft.checksThisStreet += 1;
-  draft.pendingResponseCount -= 1;
 };
 
 const handleStreetAdvance = (
   draft: Draft<DealState>,
   event: StreetAdvanceEvent,
 ) => {
-  draft.street = event.street;
+  // event.streetは終了したストリートなので、次のストリートを設定
+  const nextStreet = getNextStreet(event.street);
+  if (nextStreet) {
+    draft.street = nextStreet;
+  }
   draft.currentBet = 0;
   draft.raiseCount = 0;
   draft.checksThisStreet = 0;
   draft.actionsThisStreet = [];
+  draft.pendingResponseCount = 0;
 
   // ストリート開始時は全プレイヤーのそのストリートでのコミットを0にする
   for (const p of draft.players) {
@@ -138,5 +156,21 @@ const handleStreetAdvance = (
   // 最初のアクターを決定（3rdはブリングイン、他はルールに基づく）
   // MVPではとりあえず 0 に戻すか、状況に合わせて調整
   draft.currentActorIndex = 0;
-  draft.pendingResponseCount = draft.players.filter((p) => p.active).length;
+};
+
+const getNextStreet = (
+  current: DealState["street"],
+): DealState["street"] | null => {
+  switch (current) {
+    case "3rd":
+      return "4th";
+    case "4th":
+      return "5th";
+    case "5th":
+      return "6th";
+    case "6th":
+      return "7th";
+    case "7th":
+      return null;
+  }
 };
