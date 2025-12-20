@@ -181,4 +181,3 @@ export interface GameState {
   dealHistory: DealSummary[];
   gameFinished: boolean;
 }
-
