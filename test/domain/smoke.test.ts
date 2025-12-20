@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { DealState, GameType, Street } from "@/domain/types";
 
 describe("smoke test", () => {
