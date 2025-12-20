@@ -60,6 +60,7 @@ const deal = useAppStore((s) => s.game?.currentDeal);
 - `any` 禁止（unknown + Zod で処理）
 - union type を積極的に使う（EventType, Screen など）
 - 「値の集合」は enum より union を優先
+- 関数はアロー関数（`const func = () => {}`）を優先
 
 ```ts
 export type Screen = "SETUP" | "PLAY" | "HISTORY" | "SETTINGS";
@@ -140,6 +141,7 @@ const AppStateSchema = z.object({
 - domainの pure function を最優先でテスト
 - storeフローは次点
 - UIテストはMVPでは必須ではない
+- **テストケースのタイトル（`describe`, `it`）は日本語で記述する**
 
 ```ts
 describe("allowedActions", () => {
