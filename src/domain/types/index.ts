@@ -6,6 +6,35 @@ export type PlayerKind = "human" | "cpu";
 export type EventId = string;
 export type PlayerId = string;
 
+// Card関連
+export type Suit = "c" | "d" | "h" | "s";
+export type Rank =
+  | "A"
+  | "K"
+  | "Q"
+  | "J"
+  | "T"
+  | "9"
+  | "8"
+  | "7"
+  | "6"
+  | "5"
+  | "4"
+  | "3"
+  | "2";
+
+export interface Card {
+  suit: Suit;
+  rank: Rank;
+}
+
+export type Deck = Card[];
+
+export interface PlayerHand {
+  downCards: Card[]; // 裏
+  upCards: Card[]; // 表
+}
+
 // DealState関連
 export interface PlayerState {
   seat: SeatIndex;
@@ -35,6 +64,9 @@ export interface DealState {
   checksThisStreet: number;
   actionsThisStreet: string[];
   dealFinished: boolean;
+  deck: Deck;
+  rngSeed: string;
+  hands: Record<SeatIndex, PlayerHand>;
 }
 
 // Event関連
@@ -48,7 +80,13 @@ export type EventType =
   | "FOLD"
   | "CHECK"
   | "STREET_ADVANCE"
-  | "DEAL_END";
+  | "DEAL_END"
+  | "DEAL_INIT"
+  | "DEAL_CARDS_3RD"
+  | "DEAL_CARD_4TH"
+  | "DEAL_CARD_5TH"
+  | "DEAL_CARD_6TH"
+  | "DEAL_CARD_7TH";
 
 export interface BaseEvent {
   id: EventId;
@@ -124,6 +162,25 @@ export interface DealEndEvent extends BaseEvent {
   street: Street | null;
 }
 
+export interface DealInitEvent extends BaseEvent {
+  type: "DEAL_INIT";
+  seat: null;
+  street: null;
+  rngSeed: string;
+}
+
+export interface DealCards3rdEvent extends BaseEvent {
+  type: "DEAL_CARDS_3RD";
+  seat: null;
+  street: "3rd";
+}
+
+export interface DealCardEvent extends BaseEvent {
+  type: "DEAL_CARD_4TH" | "DEAL_CARD_5TH" | "DEAL_CARD_6TH" | "DEAL_CARD_7TH";
+  seat: null;
+  street: "4th" | "5th" | "6th" | "7th";
+}
+
 export type Event =
   | PostAnteEvent
   | BringInEvent
@@ -134,7 +191,10 @@ export type Event =
   | FoldEvent
   | CheckEvent
   | StreetAdvanceEvent
-  | DealEndEvent;
+  | DealEndEvent
+  | DealInitEvent
+  | DealCards3rdEvent
+  | DealCardEvent;
 
 // GameState関連
 export interface GamePlayer {

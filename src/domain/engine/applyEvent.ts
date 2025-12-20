@@ -1,4 +1,11 @@
 import { type Draft, produce } from "immer";
+import {
+  createDeck,
+  dealCard7th,
+  dealCards3rd,
+  dealCardUp,
+  shuffleDeck,
+} from "../cards/dealing";
 import { getNextActor } from "../rules/actor";
 import type {
   BetEvent,
@@ -6,6 +13,9 @@ import type {
   CallEvent,
   CheckEvent,
   CompleteEvent,
+  DealCardEvent,
+  DealCards3rdEvent,
+  DealInitEvent,
   DealState,
   Event,
   FoldEvent,
@@ -44,15 +54,47 @@ export const applyEvent = (state: DealState, event: Event): DealState => {
       case "DEAL_END":
         draft.dealFinished = true;
         break;
+      case "DEAL_INIT":
+        handleDealInit(draft, event);
+        break;
+      case "DEAL_CARDS_3RD":
+        handleDealCards3rd(draft, event);
+        break;
+      case "DEAL_CARD_4TH":
+      case "DEAL_CARD_5TH":
+      case "DEAL_CARD_6TH":
+        handleDealCardUp(draft, event);
+        break;
+      case "DEAL_CARD_7TH":
+        handleDealCard7th(draft, event);
+        break;
     }
 
     // アクションの記録 (EventIdなどを入れる想定だが、MVPでは簡易文字列でも可)
-    if (event.type !== "STREET_ADVANCE" && event.type !== "DEAL_END") {
+    if (
+      event.type !== "STREET_ADVANCE" &&
+      event.type !== "DEAL_END" &&
+      event.type !== "DEAL_INIT" &&
+      event.type !== "DEAL_CARDS_3RD" &&
+      event.type !== "DEAL_CARD_4TH" &&
+      event.type !== "DEAL_CARD_5TH" &&
+      event.type !== "DEAL_CARD_6TH" &&
+      event.type !== "DEAL_CARD_7TH"
+    ) {
       draft.actionsThisStreet.push(`${event.seat}:${event.type}`);
     }
 
     // 次のアクターの更新（STREET_ADVANCEなどの特殊な場合を除き）
-    if (!draft.dealFinished && event.type !== "STREET_ADVANCE") {
+    if (
+      !draft.dealFinished &&
+      event.type !== "STREET_ADVANCE" &&
+      event.type !== "DEAL_INIT" &&
+      event.type !== "DEAL_CARDS_3RD" &&
+      event.type !== "DEAL_CARD_4TH" &&
+      event.type !== "DEAL_CARD_5TH" &&
+      event.type !== "DEAL_CARD_6TH" &&
+      event.type !== "DEAL_CARD_7TH"
+    ) {
       const next = getNextActor(draft);
       if (next !== null) {
         draft.currentActorIndex = next;
@@ -156,6 +198,53 @@ const handleStreetAdvance = (
   // 最初のアクターを決定（3rdはブリングイン、他はルールに基づく）
   // MVPではとりあえず 0 に戻すか、状況に合わせて調整
   draft.currentActorIndex = 0;
+};
+
+const handleDealInit = (draft: Draft<DealState>, event: DealInitEvent) => {
+  draft.rngSeed = event.rngSeed;
+  const deck = createDeck();
+  draft.deck = shuffleDeck(deck, event.rngSeed);
+  // handsを初期化（全seatにempty handを用意）
+  draft.hands = {};
+  for (let i = 0; i < draft.playerCount; i++) {
+    draft.hands[i] = { downCards: [], upCards: [] };
+  }
+};
+
+const handleDealCards3rd = (
+  draft: Draft<DealState>,
+  _event: DealCards3rdEvent,
+) => {
+  const activeSeats = draft.players
+    .filter((p) => p.active)
+    .map((p) => p.seat)
+    .sort((a, b) => a - b);
+
+  const result = dealCards3rd(draft.deck, activeSeats, draft.hands);
+  draft.deck = result.deck;
+  draft.hands = result.hands;
+};
+
+const handleDealCardUp = (draft: Draft<DealState>, _event: DealCardEvent) => {
+  const activeSeats = draft.players
+    .filter((p) => p.active)
+    .map((p) => p.seat)
+    .sort((a, b) => a - b);
+
+  const result = dealCardUp(draft.deck, activeSeats, draft.hands);
+  draft.deck = result.deck;
+  draft.hands = result.hands;
+};
+
+const handleDealCard7th = (draft: Draft<DealState>, _event: DealCardEvent) => {
+  const activeSeats = draft.players
+    .filter((p) => p.active)
+    .map((p) => p.seat)
+    .sort((a, b) => a - b);
+
+  const result = dealCard7th(draft.deck, activeSeats, draft.hands);
+  draft.deck = result.deck;
+  draft.hands = result.hands;
 };
 
 const getNextStreet = (

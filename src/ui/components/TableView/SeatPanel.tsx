@@ -1,6 +1,7 @@
 import type React from "react";
-import type { PlayerState } from "../../../domain/types";
+import type { DealState, PlayerState } from "../../../domain/types";
 import { ActiveIndicator } from "./ActiveIndicator";
+import { PlayerCards } from "./PlayerCards";
 
 interface SeatPanelProps {
   player: PlayerState;
@@ -9,6 +10,7 @@ interface SeatPanelProps {
   seatIndex: number;
   totalSeats: number;
   players: PlayerState[]; // Heroの位置を計算するために必要
+  deal: DealState; // カード情報を取得するために必要
 }
 
 export const SeatPanel: React.FC<SeatPanelProps> = ({
@@ -18,6 +20,7 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
   seatIndex,
   totalSeats,
   players,
+  deal,
 }) => {
   // Hero（Human）は常に下部中央（6時の位置）に配置
   // 他のプレイヤーは時計回りに配置
@@ -37,7 +40,8 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
     angle = 90 + (relativeIndex * 360) / totalSeats;
   }
 
-  const radius = 280; // テーブルの半径（px）- 大きくして見切れを防ぐ
+  // 半径を小さくして中心に寄せる（見切れを防ぐ）
+  const radius = 200; // テーブルの半径（px）
   const x = Math.cos((angle * Math.PI) / 180) * radius;
   const y = Math.sin((angle * Math.PI) / 180) * radius;
 
@@ -75,6 +79,11 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
               </span>
             </div>
           </div>
+          <PlayerCards
+            hand={deal.hands[player.seat] ?? { downCards: [], upCards: [] }}
+            playerKind={player.kind}
+            isActive={player.active}
+          />
         </div>
       </div>
     </div>

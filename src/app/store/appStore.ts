@@ -4,7 +4,15 @@ import { runCpuTurn } from "../../domain/cpu/runner";
 import { applyEvent } from "../../domain/engine/applyEvent";
 import { type StartDealParams, startNewDeal } from "../../domain/game";
 import { checkStreetEndCondition } from "../../domain/rules/street";
-import type { Event, GameState } from "../../domain/types";
+import type {
+  DealCardEvent,
+  DealCards3rdEvent,
+  DealInitEvent,
+  Event,
+  GameState,
+  PostAnteEvent,
+} from "../../domain/types";
+import { generateId } from "../../domain/utils/id";
 import type { AppState, FullStore, UiState } from "../types";
 import { loadAppState, STORAGE_VERSION, saveAppState } from "./persistence";
 
@@ -73,6 +81,53 @@ export const useAppStore = create<AppStore>((set, get) => ({
         state.game = startNewDeal(state.game, params);
       }),
     );
+
+    // DEAL_INIT → POST_ANTE* → DEAL_CARDS_3RD の順で発火
+    const current = get();
+    if (!current.game || !current.game.currentDeal) return;
+
+    // DEAL_INIT
+    const dealInitEvent: DealInitEvent = {
+      id: generateId(),
+      type: "DEAL_INIT",
+      seat: null,
+      street: null,
+      timestamp: Date.now(),
+      rngSeed: params.rngSeed,
+    };
+
+    get().dispatch(dealInitEvent);
+
+    // POST_ANTE（全プレイヤー分）
+    const currentAfterInit = get();
+    if (!currentAfterInit.game || !currentAfterInit.game.currentDeal) return;
+
+    const deal = currentAfterInit.game.currentDeal;
+    for (const player of deal.players) {
+      const postAnteEvent: PostAnteEvent = {
+        id: generateId(),
+        type: "POST_ANTE",
+        seat: player.seat,
+        street: null,
+        timestamp: Date.now(),
+        amount: deal.ante,
+      };
+      get().dispatch(postAnteEvent);
+    }
+
+    // DEAL_CARDS_3RD
+    const currentAfterAnte = get();
+    if (!currentAfterAnte.game || !currentAfterAnte.game.currentDeal) return;
+
+    const dealCards3rdEvent: DealCards3rdEvent = {
+      id: generateId(),
+      type: "DEAL_CARDS_3RD",
+      seat: null,
+      street: "3rd",
+      timestamp: Date.now(),
+    };
+
+    get().dispatch(dealCards3rdEvent);
   },
 
   dispatch: (event: Event) => {
@@ -89,6 +144,57 @@ export const useAppStore = create<AppStore>((set, get) => ({
         if (endEvent) {
           const afterEndDeal = applyEvent(nextDeal, endEvent);
           state.game.currentDeal = afterEndDeal;
+
+          // STREET_ADVANCEの場合は次のストリートのカード配布イベントを発火
+          if (endEvent.type === "STREET_ADVANCE") {
+            const nextStreet = afterEndDeal.street;
+            let dealCardEvent: DealCardEvent | null = null;
+
+            switch (nextStreet) {
+              case "4th":
+                dealCardEvent = {
+                  id: generateId(),
+                  type: "DEAL_CARD_4TH",
+                  seat: null,
+                  street: "4th",
+                  timestamp: Date.now(),
+                };
+                break;
+              case "5th":
+                dealCardEvent = {
+                  id: generateId(),
+                  type: "DEAL_CARD_5TH",
+                  seat: null,
+                  street: "5th",
+                  timestamp: Date.now(),
+                };
+                break;
+              case "6th":
+                dealCardEvent = {
+                  id: generateId(),
+                  type: "DEAL_CARD_6TH",
+                  seat: null,
+                  street: "6th",
+                  timestamp: Date.now(),
+                };
+                break;
+              case "7th":
+                dealCardEvent = {
+                  id: generateId(),
+                  type: "DEAL_CARD_7TH",
+                  seat: null,
+                  street: "7th",
+                  timestamp: Date.now(),
+                };
+                break;
+            }
+
+            if (dealCardEvent) {
+              // カード配布イベントを適用
+              const afterDeal = applyEvent(afterEndDeal, dealCardEvent);
+              state.game.currentDeal = afterDeal;
+            }
+          }
         }
       }),
     );
@@ -162,6 +268,56 @@ export const useAppStore = create<AppStore>((set, get) => ({
       let finalDeal = nextDeal;
       if (endEvent) {
         finalDeal = applyEvent(nextDeal, endEvent);
+
+        // STREET_ADVANCEの場合は次のストリートのカード配布イベントを発火
+        if (endEvent.type === "STREET_ADVANCE") {
+          const nextStreet = finalDeal.street;
+          let dealCardEvent: DealCardEvent | null = null;
+
+          switch (nextStreet) {
+            case "4th":
+              dealCardEvent = {
+                id: generateId(),
+                type: "DEAL_CARD_4TH",
+                seat: null,
+                street: "4th",
+                timestamp: Date.now(),
+              };
+              break;
+            case "5th":
+              dealCardEvent = {
+                id: generateId(),
+                type: "DEAL_CARD_5TH",
+                seat: null,
+                street: "5th",
+                timestamp: Date.now(),
+              };
+              break;
+            case "6th":
+              dealCardEvent = {
+                id: generateId(),
+                type: "DEAL_CARD_6TH",
+                seat: null,
+                street: "6th",
+                timestamp: Date.now(),
+              };
+              break;
+            case "7th":
+              dealCardEvent = {
+                id: generateId(),
+                type: "DEAL_CARD_7TH",
+                seat: null,
+                street: "7th",
+                timestamp: Date.now(),
+              };
+              break;
+          }
+
+          if (dealCardEvent) {
+            finalDeal = applyEvent(finalDeal, dealCardEvent);
+          }
+        }
+
         set(
           produce((state: AppState) => {
             if (state.game) {
