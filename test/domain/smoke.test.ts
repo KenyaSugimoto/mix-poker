@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { DealState, GameType, Street } from "@/domain/types";
 
 describe("smoke test", () => {
-  it("should import types correctly", () => {
+  it("型が正しくインポートされること", () => {
     const gameType: GameType = "studHi";
     const street: Street = "3rd";
 
@@ -10,7 +10,7 @@ describe("smoke test", () => {
     expect(street).toBe("3rd");
   });
 
-  it("should create minimal DealState structure", () => {
+  it("最小限のDealState構造が作成できること", () => {
     const dealState: DealState = {
       dealId: "test-deal-1",
       gameType: "studHi",
