@@ -106,6 +106,9 @@ export const startNewDeal = (
     checksThisStreet: 0,
     actionsThisStreet: [],
     dealFinished: false,
+    deck: [], // DEAL_INITイベントで初期化
+    rngSeed: params.rngSeed,
+    hands: {}, // DEAL_INITイベントで初期化
   };
 
   return {

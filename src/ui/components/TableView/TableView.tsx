@@ -37,6 +37,7 @@ export const TableView: React.FC<TableViewProps> = ({ deal, game }) => {
             seatIndex={index}
             totalSeats={deal.playerCount}
             players={deal.players}
+            deal={deal}
           />
         );
       })}

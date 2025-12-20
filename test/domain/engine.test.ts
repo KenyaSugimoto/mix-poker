@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { applyEvent } from "../../src/domain/engine/applyEvent";
 import type { DealState, Event } from "../../src/domain/types";
+import { generateId } from "../../src/domain/utils/id";
 
 describe("applyEvent", () => {
   const initialState: DealState = {
@@ -39,6 +40,9 @@ describe("applyEvent", () => {
     checksThisStreet: 0,
     actionsThisStreet: [],
     dealFinished: false,
+    deck: [],
+    rngSeed: "",
+    hands: {},
   };
 
   it("POST_ANTEイベントが正しく処理されること", () => {
@@ -173,5 +177,175 @@ describe("applyEvent", () => {
     expect(nextState.players[0].committedThisStreet).toBe(0);
     expect(nextState.players[1].committedThisStreet).toBe(0);
     expect(nextState.currentActorIndex).toBe(0); // Reset for MVP
+  });
+
+  describe("カード配布イベント", () => {
+    it("DEAL_INITイベントが正しく処理されること", () => {
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_INIT",
+        seat: null,
+        street: null,
+        timestamp: Date.now(),
+        rngSeed: "test-seed-123",
+      };
+
+      const nextState = applyEvent(initialState, event);
+
+      expect(nextState.rngSeed).toBe("test-seed-123");
+      expect(nextState.deck).toHaveLength(52);
+      expect(nextState.hands[0]).toEqual({ downCards: [], upCards: [] });
+      expect(nextState.hands[1]).toEqual({ downCards: [], upCards: [] });
+    });
+
+    it("DEAL_CARDS_3RDイベントが正しく処理されること", () => {
+      // DEAL_INITで初期化
+      const initState = applyEvent(initialState, {
+        id: generateId(),
+        type: "DEAL_INIT",
+        seat: null,
+        street: null,
+        timestamp: Date.now(),
+        rngSeed: "test-seed",
+      });
+
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_CARDS_3RD",
+        seat: null,
+        street: "3rd",
+        timestamp: Date.now(),
+      };
+
+      const nextState = applyEvent(initState, event);
+
+      // 各active seatにdown2+up1が配られている
+      expect(nextState.hands[0].downCards).toHaveLength(2);
+      expect(nextState.hands[0].upCards).toHaveLength(1);
+      expect(nextState.hands[1].downCards).toHaveLength(2);
+      expect(nextState.hands[1].upCards).toHaveLength(1);
+
+      // デッキから6枚消費されている（2人×3枚）
+      expect(nextState.deck).toHaveLength(46);
+    });
+
+    it("DEAL_CARD_4THイベントが正しく処理されること", () => {
+      // DEAL_INITとDEAL_CARDS_3RDで初期化
+      let state = applyEvent(initialState, {
+        id: generateId(),
+        type: "DEAL_INIT",
+        seat: null,
+        street: null,
+        timestamp: Date.now(),
+        rngSeed: "test-seed",
+      });
+
+      state = applyEvent(state, {
+        id: generateId(),
+        type: "DEAL_CARDS_3RD",
+        seat: null,
+        street: "3rd",
+        timestamp: Date.now(),
+      });
+
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_CARD_4TH",
+        seat: null,
+        street: "4th",
+        timestamp: Date.now(),
+      };
+
+      const nextState = applyEvent(state, event);
+
+      // 各active seatにup1枚追加されている
+      expect(nextState.hands[0].upCards).toHaveLength(2); // 3rdで1枚 + 4thで1枚
+      expect(nextState.hands[1].upCards).toHaveLength(2);
+
+      // デッキから2枚消費されている
+      expect(nextState.deck).toHaveLength(44);
+    });
+
+    it("DEAL_CARD_7THイベントが正しく処理されること", () => {
+      // DEAL_INITとDEAL_CARDS_3RDで初期化
+      let state = applyEvent(initialState, {
+        id: generateId(),
+        type: "DEAL_INIT",
+        seat: null,
+        street: null,
+        timestamp: Date.now(),
+        rngSeed: "test-seed",
+      });
+
+      state = applyEvent(state, {
+        id: generateId(),
+        type: "DEAL_CARDS_3RD",
+        seat: null,
+        street: "3rd",
+        timestamp: Date.now(),
+      });
+
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_CARD_7TH",
+        seat: null,
+        street: "7th",
+        timestamp: Date.now(),
+      };
+
+      const nextState = applyEvent(state, event);
+
+      // 各active seatにdown1枚追加されている
+      expect(nextState.hands[0].downCards).toHaveLength(3); // 3rdで2枚 + 7thで1枚
+      expect(nextState.hands[1].downCards).toHaveLength(3);
+
+      // デッキから2枚消費されている
+      expect(nextState.deck).toHaveLength(44);
+    });
+
+    it("fold済みseatにはカードが配られないこと", () => {
+      // fold済みの状態を作成
+      const foldedState = {
+        ...initialState,
+        players: [
+          { ...initialState.players[0], active: true },
+          { ...initialState.players[1], active: false }, // fold済み
+        ],
+        deck: [],
+        rngSeed: "",
+        hands: {},
+      };
+
+      // DEAL_INITで初期化
+      const state = applyEvent(foldedState, {
+        id: generateId(),
+        type: "DEAL_INIT",
+        seat: null,
+        street: null,
+        timestamp: Date.now(),
+        rngSeed: "test-seed",
+      });
+
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_CARDS_3RD",
+        seat: null,
+        street: "3rd",
+        timestamp: Date.now(),
+      };
+
+      const nextState = applyEvent(state, event);
+
+      // activeなseat0には配られている
+      expect(nextState.hands[0].downCards).toHaveLength(2);
+      expect(nextState.hands[0].upCards).toHaveLength(1);
+
+      // fold済みのseat1には配られていない
+      expect(nextState.hands[1]?.downCards?.length ?? 0).toBe(0);
+      expect(nextState.hands[1]?.upCards?.length ?? 0).toBe(0);
+
+      // デッキから3枚のみ消費されている（1人×3枚）
+      expect(nextState.deck).toHaveLength(49);
+    });
   });
 });
