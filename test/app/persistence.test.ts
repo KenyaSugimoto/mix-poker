@@ -1,9 +1,9 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  saveAppState,
   loadAppState,
   STORAGE_KEY,
   STORAGE_VERSION,
+  saveAppState,
 } from "../../src/app/store/persistence";
 import type { AppState } from "../../src/app/types";
 
@@ -50,7 +50,7 @@ describe("persistence", () => {
   it("スキーマに違反する場合 null を返すこと", () => {
     const invalidState = { ...validState, version: "invalid" }; // number expected
     localStorage.setItem(STORAGE_KEY, JSON.stringify(invalidState));
-    
+
     const loaded = loadAppState();
     expect(loaded).toBeNull();
   });

@@ -1,10 +1,10 @@
-import { create } from "zustand";
 import { produce } from "immer";
-import type { AppState, UiState, FullStore } from "../types";
-import type { Event, GameState } from "../../domain/types";
+import { create } from "zustand";
 import { applyEvent } from "../../domain/engine/applyEvent";
-import { saveAppState, loadAppState, STORAGE_VERSION } from "./persistence";
-import { startNewDeal, type StartDealParams } from "../../domain/game";
+import { type StartDealParams, startNewDeal } from "../../domain/game";
+import type { Event, GameState } from "../../domain/types";
+import type { AppState, FullStore, UiState } from "../types";
+import { loadAppState, STORAGE_VERSION, saveAppState } from "./persistence";
 
 export interface AppActions {
   initialize: () => void;
@@ -103,13 +103,12 @@ export const useAppStore = create<AppStore>((set, get) => ({
     // produceが完了して state が更新された後に保存する。
     const current = get();
     if (event.type === "STREET_ADVANCE" || event.type === "DEAL_END") {
-        
-        // DealEnd時の特別な処理（履歴追加など）は本来ここで行うべきだが、
-        // M1/M2範囲では「保存」まで。
-        // DealEndの詳細は M6 で実装するため、ここでは単純保存のみ。
-        // ただし、もし dealFinished が true なら履歴移動などが必要になる。
-        // MVP M2では「保存できること」を確認する。
-        
+      // DealEnd時の特別な処理（履歴追加など）は本来ここで行うべきだが、
+      // M1/M2範囲では「保存」まで。
+      // DealEndの詳細は M6 で実装するため、ここでは単純保存のみ。
+      // ただし、もし dealFinished が true なら履歴移動などが必要になる。
+      // MVP M2では「保存できること」を確認する。
+
       saveAppState(current);
     }
   },

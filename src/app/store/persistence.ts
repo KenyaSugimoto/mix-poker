@@ -47,14 +47,16 @@ const DealSummarySchema = z.object({
 
 // DealState is complex, so we validate it loosely for MVP (or define minimal structure)
 // Ideally we should replicate the full structure
-const DealStateSchema = z.object({
-  dealId: z.string(),
-  gameType: z.enum(["studHi", "razz", "stud8"]),
-  playerCount: z.number(),
-  // ... other fields implied by 'passthrough' or explicit 'any' if we want to be loose
-  // But let's try to be strictly proper where reasonable.
-  dealFinished: z.boolean(),
-}).passthrough(); // Allow other fields for now to avoid huge schema maintenance
+const DealStateSchema = z
+  .object({
+    dealId: z.string(),
+    gameType: z.enum(["studHi", "razz", "stud8"]),
+    playerCount: z.number(),
+    // ... other fields implied by 'passthrough' or explicit 'any' if we want to be loose
+    // But let's try to be strictly proper where reasonable.
+    dealFinished: z.boolean(),
+  })
+  .passthrough(); // Allow other fields for now to avoid huge schema maintenance
 
 const GameStateSchema = z.object({
   gameId: z.string(),
@@ -103,11 +105,11 @@ export const loadAppState = (): AppState | null => {
     if (!raw) return null;
 
     const parsed = JSON.parse(raw);
-    
+
     // Validate schema
     const data = AppStateSchema.parse(parsed);
-    
-    return data as any as AppState; // Cast needed because Zod type inference vs explicit type might have minor mismatches (e.g. methods vs data)
+
+    return data as unknown as AppState; // Cast needed because Zod type inference vs explicit type might have minor mismatches (e.g. methods vs data)
   } catch (e) {
     console.warn("Failed to load AppState or schema mismatch:", e);
     return null;
