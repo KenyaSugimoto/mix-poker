@@ -1,7 +1,9 @@
 import { produce } from "immer";
 import { create } from "zustand";
+import { runCpuTurn } from "../../domain/cpu/runner";
 import { applyEvent } from "../../domain/engine/applyEvent";
 import { type StartDealParams, startNewDeal } from "../../domain/game";
+import { checkStreetEndCondition } from "../../domain/rules/street";
 import type { Event, GameState } from "../../domain/types";
 import type { AppState, FullStore, UiState } from "../types";
 import { loadAppState, STORAGE_VERSION, saveAppState } from "./persistence";
@@ -11,6 +13,7 @@ export interface AppActions {
   startNewGame: (initialGameState: GameState) => void;
   startDeal: (params: StartDealParams) => void;
   dispatch: (event: Event) => void;
+  processCpuTurns: () => void;
   resetAll: () => void;
   setScreen: (screen: UiState["screen"]) => void;
 }
@@ -81,36 +84,118 @@ export const useAppStore = create<AppStore>((set, get) => ({
         const nextDeal = applyEvent(state.game.currentDeal, event);
         state.game.currentDeal = nextDeal;
 
-        // Domain側でのイベント適用後の副作用（もしあれば）
-        // 例: Deal終了判定などは applyEvent 内の dealFinished でわかる
-
-        // Persist logic
-        if (event.type === "STREET_ADVANCE" || event.type === "DEAL_END") {
-          // 状態更新後に保存するためのフラグ等は不要、immer完了後にsaveAppStateを呼ぶために
-          // ここでsaveはできない（produce内）。
-          // したがって、produceの外でsaveするか、middlewareを使う。
-          // シンプルにするため、set完了後に getState して save する必要があるが
-          // zustandのstandard patternでは外側でやる。
-          // しかしここは action 内部。
-          // produceの副作用として外部関数を呼ぶのはあまり良くないが、
-          // 同期的localStorageなら許容範囲か、あるいは subscribe を使うべきか。
-          // MVP手動保存なので、シンプルに action の最後で呼ぶ形にする。
+        // ストリート終了判定
+        const endEvent = checkStreetEndCondition(nextDeal);
+        if (endEvent) {
+          const afterEndDeal = applyEvent(nextDeal, endEvent);
+          state.game.currentDeal = afterEndDeal;
         }
       }),
     );
 
-    // Persistence Check
-    // produceが完了して state が更新された後に保存する。
+    // 保存チェック
     const current = get();
-    if (event.type === "STREET_ADVANCE" || event.type === "DEAL_END") {
-      // DealEnd時の特別な処理（履歴追加など）は本来ここで行うべきだが、
-      // M1/M2範囲では「保存」まで。
-      // DealEndの詳細は M6 で実装するため、ここでは単純保存のみ。
-      // ただし、もし dealFinished が true なら履歴移動などが必要になる。
-      // MVP M2では「保存できること」を確認する。
+    if (!current.game || !current.game.currentDeal) return;
 
-      saveAppState(current);
+    const deal = current.game.currentDeal;
+    const endEvent = checkStreetEndCondition(deal);
+    if (endEvent) {
+      // 保存
+      if (endEvent.type === "STREET_ADVANCE" || endEvent.type === "DEAL_END") {
+        saveAppState(current);
+      }
+
+      // DEAL_ENDの場合はCPUターンを実行しない
+      if (endEvent.type === "DEAL_END") return;
+    } else {
+      // 通常のイベントでも保存が必要な場合
+      if (event.type === "STREET_ADVANCE" || event.type === "DEAL_END") {
+        saveAppState(current);
+      }
     }
+
+    // CPUターンの自動進行（Humanアクション後）
+    setTimeout(() => {
+      get().processCpuTurns();
+    }, 500); // Humanアクション後のCPUターン開始までのdelay
+  },
+
+  /**
+   * CPUターンを連続実行する（再帰的に）
+   */
+  processCpuTurns: () => {
+    const state = get();
+    if (!state.game || !state.game.currentDeal) return;
+
+    const deal = state.game.currentDeal;
+    if (deal.dealFinished) return;
+
+    const currentActor = deal.players[deal.currentActorIndex];
+    if (!currentActor || currentActor.kind !== "cpu") return;
+
+    // CPUターン実行前に短いdelayを入れる
+    setTimeout(() => {
+      const currentState = get();
+      if (!currentState.game || !currentState.game.currentDeal) return;
+
+      const currentDeal = currentState.game.currentDeal;
+      if (currentDeal.dealFinished) return;
+
+      const actor = currentDeal.players[currentDeal.currentActorIndex];
+      if (!actor || actor.kind !== "cpu") return;
+
+      // CPUターンを実行
+      const result = runCpuTurn(currentDeal, currentDeal.currentActorIndex);
+      if (!result) return;
+
+      // イベントを適用
+      set(
+        produce((state: AppState) => {
+          if (!state.game) return;
+          state.game.currentDeal = result.nextState;
+        }),
+      );
+
+      // ストリート終了判定
+      const nextDeal = result.nextState;
+      const endEvent = checkStreetEndCondition(nextDeal);
+      let finalDeal = nextDeal;
+      if (endEvent) {
+        finalDeal = applyEvent(nextDeal, endEvent);
+        set(
+          produce((state: AppState) => {
+            if (state.game) {
+              state.game.currentDeal = finalDeal;
+            }
+          }),
+        );
+
+        // 保存
+        if (
+          endEvent.type === "STREET_ADVANCE" ||
+          endEvent.type === "DEAL_END"
+        ) {
+          saveAppState(get());
+        }
+
+        // DEAL_ENDの場合は終了
+        if (endEvent.type === "DEAL_END") return;
+      }
+
+      // 次のアクターがCPUかチェック
+      const updatedState = get();
+      if (!updatedState.game || !updatedState.game.currentDeal) return;
+      const updatedDeal = updatedState.game.currentDeal;
+      if (updatedDeal.dealFinished) return;
+
+      const nextActor = updatedDeal.players[updatedDeal.currentActorIndex];
+      if (!nextActor || nextActor.kind !== "cpu") return;
+
+      // 次のCPUターンへ（短いdelayを入れる）
+      setTimeout(() => {
+        get().processCpuTurns();
+      }, 800); // MVP: 800ms delay（CPUターン間の間隔）
+    }, 800); // CPUターン実行前のdelay
   },
 
   resetAll: () => {
