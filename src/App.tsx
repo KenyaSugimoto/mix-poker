@@ -1,6 +1,8 @@
 import React from "react";
 import { useAppStore } from "./app/store/appStore";
+import { HistoryPage } from "./ui/pages/HistoryPage";
 import { PlayPage } from "./ui/pages/PlayPage";
+import { SettingsPage } from "./ui/pages/SettingsPage";
 import { SetupPage } from "./ui/pages/SetupPage";
 
 const App: React.FC = () => {
@@ -20,6 +22,8 @@ const App: React.FC = () => {
         </div>
       )}
       {screen === "PLAY" && <PlayPage />}
+      {screen === "HISTORY" && <HistoryPage />}
+      {screen === "SETTINGS" && <SettingsPage />}
     </div>
   );
 };

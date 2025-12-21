@@ -18,7 +18,12 @@ import type {
 } from "../../domain/types";
 import { generateId } from "../../domain/utils/id";
 import type { AppState, FullStore, UiState } from "../types";
-import { loadAppState, STORAGE_VERSION, saveAppState } from "./persistence";
+import {
+  loadAppState,
+  STORAGE_KEY,
+  STORAGE_VERSION,
+  saveAppState,
+} from "./persistence";
 
 const MAX_FULL_RECENT = 10;
 
@@ -48,6 +53,9 @@ export interface AppActions {
   processCpuTurns: () => void;
   resetAll: () => void;
   setScreen: (screen: UiState["screen"]) => void;
+  setSelectedDealId: (dealId: string | null) => void;
+  toggleFavoriteDeal: (dealId: string) => void;
+  setDisplayUnit: (unit: "points" | "bb") => void;
 }
 
 export type AppStore = AppState & AppActions;
@@ -422,19 +430,67 @@ export const useAppStore = create<AppStore>((set, get) => ({
       setTimeout(() => {
         get().processCpuTurns();
       }, 800); // MVP: 800ms delay（CPUターン間の間隔）
-    }, 800); // CPUターン実行前のdelay
+    }, 400); // CPUターン実行前のdelay
   },
 
   resetAll: () => {
     set(DEFAULT_STATE);
-    localStorage.removeItem("mix-poker:appState"); // 直接キー指定注意
-    // STORAGE_KEYをexportして使うべきだがimport循環に注意。今回は直書きor別ファイル定数共有
+    localStorage.removeItem(STORAGE_KEY);
   },
 
   setScreen: (screen) => {
     set(
       produce((state: AppState) => {
         state.ui.screen = screen;
+      }),
+    );
+  },
+
+  setSelectedDealId: (dealId) => {
+    set(
+      produce((state: AppState) => {
+        state.ui.selectedDealId = dealId;
+      }),
+    );
+  },
+
+  toggleFavoriteDeal: (dealId) => {
+    set(
+      produce((state: AppState) => {
+        const fullDeal = state.fullStore.fullDealsById[dealId];
+        // フル保存がないディールはお気に入りにできない
+        if (!fullDeal) return;
+
+        const currentFavorites = state.fullStore.favoriteDealIds;
+        const isFavorite = currentFavorites.includes(dealId);
+
+        if (isFavorite) {
+          // お気に入りから削除
+          state.fullStore.favoriteDealIds = currentFavorites.filter(
+            (id) => id !== dealId,
+          );
+        } else {
+          // お気に入りに追加（最大50件）
+          const MAX_FAVORITE = 50;
+          const newFavorites = [dealId, ...currentFavorites].slice(
+            0,
+            MAX_FAVORITE,
+          );
+          state.fullStore.favoriteDealIds = newFavorites;
+        }
+
+        // 変更を保存
+        saveAppState(get());
+      }),
+    );
+  },
+
+  setDisplayUnit: (unit) => {
+    set(
+      produce((state: AppState) => {
+        state.ui.displayUnit = unit;
+        // 表示単位の変更は保存する（任意）
+        saveAppState(get());
       }),
     );
   },
