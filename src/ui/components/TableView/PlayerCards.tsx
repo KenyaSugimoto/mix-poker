@@ -5,6 +5,7 @@ interface PlayerCardsProps {
   hand: PlayerHand;
   playerKind: PlayerKind;
   isActive: boolean;
+  isDealFinished: boolean; // ディールが終了しているかどうか
 }
 
 /**
@@ -73,12 +74,15 @@ export const PlayerCards: React.FC<PlayerCardsProps> = ({
   hand,
   playerKind,
   isActive,
+  isDealFinished,
 }) => {
   if (!isActive) {
     return null; // foldしたプレイヤーはカードを表示しない
   }
 
   const isHuman = playerKind === "human";
+  // ディールが終了していて、プレイヤーがアクティブな場合、ダウンカードを公開する
+  const shouldRevealDownCards = isHuman || (isDealFinished && isActive);
   const { downCards, upCards } = hand;
 
   // レイアウト：d1 d2 u1 u2 u3 u4 d3
@@ -103,7 +107,11 @@ export const PlayerCards: React.FC<PlayerCardsProps> = ({
           className="absolute bottom-0"
           style={{ left: `${0}px`, zIndex: 0 }}
         >
-          {isHuman ? <CardFront card={downCards[0]} /> : <CardBack />}
+          {shouldRevealDownCards ? (
+            <CardFront card={downCards[0]} />
+          ) : (
+            <CardBack />
+          )}
         </div>
       )}
 
@@ -113,7 +121,11 @@ export const PlayerCards: React.FC<PlayerCardsProps> = ({
           className="absolute bottom-0"
           style={{ left: `${15}px`, zIndex: 1 }}
         >
-          {isHuman ? <CardFront card={downCards[1]} /> : <CardBack />}
+          {shouldRevealDownCards ? (
+            <CardFront card={downCards[1]} />
+          ) : (
+            <CardBack />
+          )}
         </div>
       )}
 
@@ -163,7 +175,11 @@ export const PlayerCards: React.FC<PlayerCardsProps> = ({
           className="absolute bottom-0"
           style={{ left: `${90}px`, zIndex: 6 }}
         >
-          {isHuman ? <CardFront card={downCards[2]} /> : <CardBack />}
+          {shouldRevealDownCards ? (
+            <CardFront card={downCards[2]} />
+          ) : (
+            <CardBack />
+          )}
         </div>
       )}
     </div>

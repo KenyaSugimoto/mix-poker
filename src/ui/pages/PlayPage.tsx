@@ -25,6 +25,7 @@ const StartDealButton: React.FC<{ game: GameState }> = ({ game }) => {
 
 export const PlayPage: React.FC = () => {
   const game = useAppStore((state) => state.game);
+  const fullStore = useAppStore((state) => state.fullStore);
   const setScreen = useAppStore((state) => state.setScreen);
 
   if (!game) {
@@ -44,30 +45,55 @@ export const PlayPage: React.FC = () => {
     );
   }
 
-  if (!game.currentDeal) {
+  // currentDealがない場合、最新の終了したディールを取得
+  const displayDeal =
+    game.currentDeal ||
+    (() => {
+      if (game.dealHistory.length === 0) return null;
+      const lastDealId = game.dealHistory[0].dealId;
+      return fullStore.fullDealsById[lastDealId] || null;
+    })();
+
+  // ディールが全く存在しない場合（初回起動時など）
+  if (!displayDeal) {
     return (
-      <div className="max-w-4xl mx-auto p-4">
-        <div className="bg-card rounded-xl p-8 text-center shadow-sm border">
-          <p className="text-muted-foreground mb-4">No active deal</p>
-          <StartDealButton game={game} />
+      <div className="h-full w-full flex flex-col p-6 space-y-6 overflow-hidden">
+        <div className="flex-1 min-h-0 flex items-center justify-center">
+          <div className="bg-card rounded-xl p-8 text-center shadow-sm border">
+            <p className="text-muted-foreground mb-4">No deal available</p>
+            <StartDealButton game={game} />
+          </div>
         </div>
       </div>
     );
   }
 
+  const isDealFinished = !game.currentDeal;
+  // 終了したディールの場合、対応するDealSummaryを取得
+  const dealSummary =
+    isDealFinished && game.dealHistory.length > 0
+      ? game.dealHistory.find((s) => s.dealId === displayDeal.dealId) || null
+      : null;
+
   return (
     <div className="h-full w-full flex flex-col p-6 space-y-6 overflow-hidden">
       <div className="flex-shrink-0">
-        <GameHeader deal={game.currentDeal} dealIndex={game.dealIndex} />
+        <GameHeader deal={displayDeal} dealIndex={game.dealIndex} />
       </div>
       <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
-        <TableView deal={game.currentDeal} game={game} />
+        <TableView deal={displayDeal} game={game} dealSummary={dealSummary} />
       </div>
       <div className="flex-shrink-0">
-        <ActionPanel
-          deal={game.currentDeal}
-          currentSeat={game.currentDeal.currentActorIndex}
-        />
+        {isDealFinished ? (
+          <div className="flex justify-center">
+            <StartDealButton game={game} />
+          </div>
+        ) : (
+          <ActionPanel
+            deal={displayDeal}
+            currentSeat={displayDeal.currentActorIndex}
+          />
+        )}
       </div>
     </div>
   );

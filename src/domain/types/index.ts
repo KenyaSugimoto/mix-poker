@@ -35,6 +35,22 @@ export interface PlayerHand {
   upCards: Card[]; // 表
 }
 
+// Showdown関連
+export type HandRank =
+  | "HIGH_CARD"
+  | "ONE_PAIR"
+  | "TWO_PAIR"
+  | "THREE_OF_A_KIND"
+  | "STRAIGHT"
+  | "FLUSH"
+  | "FULL_HOUSE"
+  | "FOUR_OF_A_KIND"
+  | "STRAIGHT_FLUSH";
+
+export interface LowHandScore {
+  ranks: number[]; // 昇順（A=1, K=13）
+}
+
 // DealState関連
 export interface PlayerState {
   seat: SeatIndex;
@@ -50,6 +66,7 @@ export interface DealState {
   gameType: GameType;
   playerCount: number; // 2〜7人
   players: PlayerState[];
+  seatOrder: PlayerId[]; // seatIndex → PlayerId の対応
   ante: number;
   bringIn: number;
   smallBet: number;
@@ -67,6 +84,7 @@ export interface DealState {
   deck: Deck;
   rngSeed: string;
   hands: Record<SeatIndex, PlayerHand>;
+  startedAt?: number; // ディール開始時刻（DealSummary生成用）
 }
 
 // Event関連
@@ -80,6 +98,7 @@ export type EventType =
   | "FOLD"
   | "CHECK"
   | "STREET_ADVANCE"
+  // TODO: SHOWDOWN追加
   | "DEAL_END"
   | "DEAL_INIT"
   | "DEAL_CARDS_3RD"
@@ -228,6 +247,7 @@ export interface DealSummary {
   winnersLow?: PlayerId[];
   pot: number;
   deltaStacks: Record<PlayerId, number>;
+  potShare: Record<PlayerId, number>; // 各プレイヤーが獲得したpot額
 }
 
 export interface GameState {

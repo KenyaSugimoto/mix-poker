@@ -8,6 +8,7 @@ describe("getAllowedActions", () => {
     gameType: "studHi",
     playerCount: 2,
     players: [],
+    seatOrder: [],
     ante: 10,
     bringIn: 20,
     smallBet: 40,
@@ -22,6 +23,9 @@ describe("getAllowedActions", () => {
     checksThisStreet: 0,
     actionsThisStreet: [],
     dealFinished: false,
+    deck: [],
+    rngSeed: "",
+    hands: {},
   };
 
   it("3rdストリートでベットがない場合、BRING_IN と COMPLETE が許可されること", () => {

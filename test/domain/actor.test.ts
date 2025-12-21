@@ -33,6 +33,7 @@ describe("getNextActor", () => {
         committedThisStreet: 0,
       },
     ],
+    seatOrder: ["player1", "player2", "player3"],
     ante: 0,
     bringIn: 0,
     smallBet: 0,
@@ -47,6 +48,9 @@ describe("getNextActor", () => {
     checksThisStreet: 0,
     actionsThisStreet: [],
     dealFinished: false,
+    deck: [],
+    rngSeed: "",
+    hands: {},
   };
 
   it("pendingResponseCount > 0 の場合、次のアクティブなプレイヤーインデックスを返すこと", () => {

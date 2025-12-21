@@ -26,6 +26,7 @@ describe("applyEvent", () => {
         committedThisStreet: 0,
       },
     ],
+    seatOrder: ["player1", "player2"],
     ante: 10,
     bringIn: 20,
     smallBet: 40,

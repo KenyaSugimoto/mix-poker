@@ -51,7 +51,7 @@ describe("dealing", () => {
         "2",
       ];
       expectedRanks.forEach((rank) => {
-        expect(ranks.has(rank)).toBe(true);
+        expect(ranks.has(rank as Card["rank"])).toBe(true);
       });
     });
   });

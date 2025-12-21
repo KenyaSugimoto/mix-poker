@@ -11,6 +11,9 @@ interface SeatPanelProps {
   totalSeats: number;
   players: PlayerState[]; // Heroの位置を計算するために必要
   deal: DealState; // カード情報を取得するために必要
+  isDealFinished: boolean; // ディールが終了しているかどうか
+  isWinner?: boolean; // 勝者かどうか
+  winningsAmount?: number | null; // 獲得額（正の値のみ）
 }
 
 export const SeatPanel: React.FC<SeatPanelProps> = ({
@@ -21,6 +24,9 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
   totalSeats,
   players,
   deal,
+  isDealFinished,
+  isWinner = false,
+  winningsAmount = null,
 }) => {
   // Hero（Human）は常に下部中央（6時の位置）に配置
   // 他のプレイヤーは時計回りに配置
@@ -56,17 +62,31 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
       <div
         className={`relative bg-card rounded-xl p-4 shadow-sm border min-w-[160px] transition-all ${
           isCurrentActor ? "ring-2 ring-primary ring-offset-2" : ""
-        } ${!player.active ? "opacity-50" : ""}`}
+        } ${isWinner ? "ring-2 ring-yellow-400 ring-offset-2 bg-yellow-50/10" : ""} ${
+          !player.active ? "opacity-50" : ""
+        }`}
       >
         <ActiveIndicator isActive={isCurrentActor} />
         <div className="space-y-2">
-          <div className="font-semibold text-sm">{playerName}</div>
+          <div className="flex items-center justify-between">
+            <div className="font-semibold text-sm">{playerName}</div>
+            {isWinner && (
+              <div className="text-xs font-bold text-yellow-400">WINNER</div>
+            )}
+          </div>
           <div className="text-xs text-muted-foreground">
             {player.kind === "human" ? "You" : "CPU"}
           </div>
           {!player.active && (
             <div className="text-xs text-destructive font-semibold">FOLDED</div>
           )}
+          {winningsAmount !== null &&
+            winningsAmount !== undefined &&
+            winningsAmount > 0 && (
+              <div className="text-sm font-bold text-green-500">
+                +{winningsAmount}
+              </div>
+            )}
           <div className="pt-2 border-t space-y-1">
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">Stack:</span>
@@ -83,6 +103,7 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
             hand={deal.hands[player.seat] ?? { downCards: [], upCards: [] }}
             playerKind={player.kind}
             isActive={player.active}
+            isDealFinished={isDealFinished}
           />
         </div>
       </div>
