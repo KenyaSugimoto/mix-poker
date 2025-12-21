@@ -2,7 +2,11 @@ import { produce } from "immer";
 import { create } from "zustand";
 import { runCpuTurn } from "../../domain/cpu/runner";
 import { applyEvent } from "../../domain/engine/applyEvent";
-import { type StartDealParams, startNewDeal } from "../../domain/game";
+import {
+  finishDeal,
+  type StartDealParams,
+  startNewDeal,
+} from "../../domain/game";
 import { checkStreetEndCondition } from "../../domain/rules/street";
 import type {
   DealCardEvent,
@@ -15,6 +19,26 @@ import type {
 import { generateId } from "../../domain/utils/id";
 import type { AppState, FullStore, UiState } from "../types";
 import { loadAppState, STORAGE_VERSION, saveAppState } from "./persistence";
+
+const MAX_FULL_RECENT = 10;
+
+/**
+ * フル保存のeviction処理（fullDealIdsに含まれないものを削除）
+ */
+const evictFullDeals = (state: AppState): void => {
+  const keepIds = new Set<string>(state.fullStore.fullDealIds);
+
+  for (const id of Object.keys(state.fullStore.fullDealsById)) {
+    if (!keepIds.has(id)) {
+      delete state.fullStore.fullDealsById[id];
+    }
+  }
+
+  // お気に入りも、フルが存在しないものは削除
+  state.fullStore.favoriteDealIds = state.fullStore.favoriteDealIds.filter(
+    (id) => keepIds.has(id),
+  );
+};
 
 export interface AppActions {
   initialize: () => void;
@@ -199,20 +223,45 @@ export const useAppStore = create<AppStore>((set, get) => ({
       }),
     );
 
-    // 保存チェック
+    // 保存チェックとDEAL_END処理
     const current = get();
     if (!current.game || !current.game.currentDeal) return;
 
     const deal = current.game.currentDeal;
     const endEvent = checkStreetEndCondition(deal);
     if (endEvent) {
-      // 保存
-      if (endEvent.type === "STREET_ADVANCE" || endEvent.type === "DEAL_END") {
-        saveAppState(current);
+      // DEAL_ENDの場合はfinishDealを呼び出す
+      if (endEvent.type === "DEAL_END") {
+        set(
+          produce((state: AppState) => {
+            if (!state.game || !state.game.currentDeal) return;
+
+            const finishedDeal = state.game.currentDeal;
+            // finishDealでGameStateを更新
+            state.game = finishDeal(state.game, finishedDeal);
+
+            // フル保存に追加
+            const dealId = finishedDeal.dealId;
+            state.fullStore.fullDealIds = [
+              dealId,
+              ...state.fullStore.fullDealIds,
+            ].slice(0, MAX_FULL_RECENT);
+            state.fullStore.fullDealsById[dealId] = finishedDeal;
+
+            // evict実行
+            evictFullDeals(state);
+          }),
+        );
+
+        // 保存
+        saveAppState(get());
+        return; // CPUターンを実行しない
       }
 
-      // DEAL_ENDの場合はCPUターンを実行しない
-      if (endEvent.type === "DEAL_END") return;
+      // STREET_ADVANCEの場合は保存
+      if (endEvent.type === "STREET_ADVANCE") {
+        saveAppState(current);
+      }
     } else {
       // 通常のイベントでも保存が必要な場合
       if (event.type === "STREET_ADVANCE" || event.type === "DEAL_END") {
@@ -223,7 +272,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     // CPUターンの自動進行（Humanアクション後）
     setTimeout(() => {
       get().processCpuTurns();
-    }, 500); // Humanアクション後のCPUターン開始までのdelay
+    }, 200); // Humanアクション後のCPUターン開始までのdelay
   },
 
   /**
@@ -326,16 +375,38 @@ export const useAppStore = create<AppStore>((set, get) => ({
           }),
         );
 
-        // 保存
-        if (
-          endEvent.type === "STREET_ADVANCE" ||
-          endEvent.type === "DEAL_END"
-        ) {
+        // DEAL_ENDの場合はfinishDealを呼び出す
+        if (endEvent.type === "DEAL_END") {
+          set(
+            produce((state: AppState) => {
+              if (!state.game || !state.game.currentDeal) return;
+
+              const finishedDeal = state.game.currentDeal;
+              // finishDealでGameStateを更新
+              state.game = finishDeal(state.game, finishedDeal);
+
+              // フル保存に追加
+              const dealId = finishedDeal.dealId;
+              state.fullStore.fullDealIds = [
+                dealId,
+                ...state.fullStore.fullDealIds,
+              ].slice(0, MAX_FULL_RECENT);
+              state.fullStore.fullDealsById[dealId] = finishedDeal;
+
+              // evict実行
+              evictFullDeals(state);
+            }),
+          );
+
+          // 保存
           saveAppState(get());
+          return; // CPUターンを実行しない
         }
 
-        // DEAL_ENDの場合は終了
-        if (endEvent.type === "DEAL_END") return;
+        // STREET_ADVANCEの場合は保存
+        if (endEvent.type === "STREET_ADVANCE") {
+          saveAppState(get());
+        }
       }
 
       // 次のアクターがCPUかチェック

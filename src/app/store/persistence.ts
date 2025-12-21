@@ -43,6 +43,7 @@ const DealSummarySchema = z.object({
   winnersLow: z.array(PlayerIdSchema).optional(),
   pot: z.number(),
   deltaStacks: z.record(z.string(), z.number()),
+  potShare: z.record(z.string(), z.number()),
 });
 
 // DealState is complex, so we validate it loosely for MVP (or define minimal structure)

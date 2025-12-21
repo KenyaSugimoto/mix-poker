@@ -33,6 +33,7 @@ describe("smoke test", () => {
           committedThisStreet: 0,
         },
       ],
+      seatOrder: ["player1", "player2"],
       ante: 1,
       bringIn: 2,
       smallBet: 4,
@@ -47,6 +48,9 @@ describe("smoke test", () => {
       checksThisStreet: 0,
       actionsThisStreet: [],
       dealFinished: false,
+      deck: [],
+      rngSeed: "",
+      hands: {},
     };
 
     expect(dealState.dealId).toBe("test-deal-1");
