@@ -98,7 +98,6 @@ export type EventType =
   | "FOLD"
   | "CHECK"
   | "STREET_ADVANCE"
-  // TODO: SHOWDOWN追加
   | "DEAL_END"
   | "DEAL_INIT"
   | "DEAL_CARDS_3RD"
