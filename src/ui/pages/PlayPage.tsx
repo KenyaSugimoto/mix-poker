@@ -78,6 +78,24 @@ export const PlayPage: React.FC = () => {
   return (
     <div className="h-full w-full flex flex-col p-6 space-y-6 overflow-hidden">
       <div className="flex-shrink-0">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setScreen("HISTORY")}
+              className="px-4 py-2 bg-muted text-muted-foreground rounded hover:bg-muted/80"
+            >
+              履歴
+            </button>
+            <button
+              type="button"
+              onClick={() => setScreen("SETTINGS")}
+              className="px-4 py-2 bg-muted text-muted-foreground rounded hover:bg-muted/80"
+            >
+              設定
+            </button>
+          </div>
+        </div>
         <GameHeader deal={displayDeal} dealIndex={game.dealIndex} />
       </div>
       <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
