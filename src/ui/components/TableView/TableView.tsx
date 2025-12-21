@@ -1,5 +1,6 @@
 import type React from "react";
 import type { DealState, DealSummary, GameState } from "../../../domain/types";
+import { PotStackBadge } from "./PotStackBadge";
 import { SeatPanel } from "./SeatPanel";
 
 interface TableViewProps {
@@ -31,18 +32,27 @@ export const TableView: React.FC<TableViewProps> = ({
     });
   }
 
+  // プレイヤー数に応じてテーブルサイズを調整
+  const getTableSize = (playerCount: number) => {
+    if (playerCount <= 3) return "max-w-[1200px] max-h-[800px] min-h-[600px]";
+    if (playerCount <= 5) return "max-w-[1400px] max-h-[900px] min-h-[700px]";
+    return "max-w-[1600px] max-h-[1000px] min-h-[800px]"; // 6-7人
+  };
+
   return (
-    <div className="relative w-full max-w-[1200px] h-full max-h-[800px] min-h-[600px] bg-gradient-to-br from-green-900 to-green-800 rounded-2xl shadow-xl border-4 border-green-700 overflow-hidden p-8">
+    <div
+      className={`relative w-full h-full ${getTableSize(deal.playerCount)} bg-gradient-to-br from-green-900 to-green-800 rounded-2xl shadow-xl border-4 border-green-700 overflow-hidden p-8`}
+    >
       {/* テーブル中央のポット表示 */}
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-        <div className="bg-card/90 backdrop-blur-sm rounded-xl px-6 py-3 shadow-lg border">
-          <div className="text-center">
-            <div className="text-xs text-muted-foreground mb-1">Pot</div>
-            <div className="text-2xl font-bold">{deal.pot}</div>
+      <div className="absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
+        <PotStackBadge pot={deal.pot} ante={deal.ante} />
+        {/* ポット額（コンパクト） */}
+        <div className="rounded-lg border border-white/10 bg-black/35 px-3 py-2 shadow-md backdrop-blur-sm">
+          <div className="text-sm font-bold tabular-nums text-white">
+            {deal.pot}
           </div>
         </div>
       </div>
-
       {/* 各プレイヤーのSeatPanel */}
       {deal.players.map((player, index) => {
         // DealStateのplayersはseat順に並んでいるが、GameStateのplayersはID順

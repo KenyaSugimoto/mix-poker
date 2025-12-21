@@ -14,7 +14,7 @@ interface PlayerCardsProps {
 const CardBack: React.FC = () => {
   return (
     <div className="w-12 h-16 bg-gradient-to-br from-blue-600 to-blue-800 rounded border-2 border-blue-900 shadow-md flex items-center justify-center">
-      <div className="text-white text-xs font-bold">?</div>
+      <div className="text-white text-xs font-bold"></div>
     </div>
   );
 };

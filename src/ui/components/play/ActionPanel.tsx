@@ -78,19 +78,23 @@ export const ActionPanel: React.FC<ActionPanelProps> = () => {
   };
 
   return (
-    <div className="bg-card rounded-xl p-4 shadow-sm border">
-      <div className="text-sm font-semibold mb-3">Your Action</div>
+    <div className="bg-card rounded-xl p-3 shadow-sm border">
       <div className="flex flex-wrap gap-2">
-        {humanActions.map((action) => (
-          <button
-            key={action}
-            type="button"
-            onClick={() => handleAction(action)}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {getActionLabel(action)}
-          </button>
-        ))}
+        <div className="text-sm flex items-center font-semibold">
+          Your Action
+        </div>
+        <div className="flex flex-wrap gap-4 border-l pl-4">
+          {humanActions.map((action) => (
+            <button
+              key={action}
+              type="button"
+              onClick={() => handleAction(action)}
+              className="px-3 py-2 text-sm bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {getActionLabel(action)}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

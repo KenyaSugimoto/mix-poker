@@ -14,7 +14,7 @@ export const PlayerConfigList: React.FC<Props> = ({ players, onChange }) => {
     // Always add as CPU
     onChange([
       ...players,
-      { id: newId, name: `Player ${players.length + 1}`, kind: "cpu" },
+      { id: newId, name: `Player ${players.length}`, kind: "cpu" },
     ]);
   };
 

@@ -21,7 +21,7 @@ export const SetupPage: React.FC = () => {
   ]);
   const [players, setPlayers] = useState<GamePlayer[]>([
     { id: "p1", name: "Hero", kind: "human" },
-    { id: "p2", name: "Villain", kind: "cpu" },
+    { id: "p2", name: "Player 1", kind: "cpu" },
   ]);
   // Default Stakes (High limit example)
   const [stakes, setStakes] = useState<Stakes>({

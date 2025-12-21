@@ -1,5 +1,6 @@
 import type React from "react";
 import type { DealState, PlayerState } from "../../../domain/types";
+import { getActionLabel, getLastAction } from "../../utils/actionLabel";
 import { ActiveIndicator } from "./ActiveIndicator";
 import { PlayerCards } from "./PlayerCards";
 
@@ -46,19 +47,29 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
     angle = 90 + (relativeIndex * 360) / totalSeats;
   }
 
-  // 半径を小さくして中心に寄せる（見切れを防ぐ）
-  const radius = 200; // テーブルの半径（px）
+  const radius = 245; // 半径(px)
   const x = Math.cos((angle * Math.PI) / 180) * radius;
   const y = Math.sin((angle * Math.PI) / 180) * radius;
 
+  // そのストリートにおける直近アクションを取得
+  const lastAction = getLastAction(deal.actionsThisStreet, seatIndex);
+
   return (
     <div
-      className="absolute transform -translate-x-1/2 -translate-y-1/2"
+      className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center"
       style={{
         left: `calc(50% + ${x}px)`,
         top: `calc(50% + ${y}px)`,
       }}
     >
+      <div className="mb-2">
+        <PlayerCards
+          hand={deal.hands[player.seat] ?? { downCards: [], upCards: [] }}
+          playerKind={player.kind}
+          isActive={player.active}
+          isDealFinished={isDealFinished}
+        />
+      </div>
       <div
         className={`relative bg-card rounded-xl p-4 shadow-sm border min-w-[160px] transition-all ${
           isCurrentActor ? "ring-2 ring-primary ring-offset-2" : ""
@@ -66,16 +77,18 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
           !player.active ? "opacity-50" : ""
         }`}
       >
-        <ActiveIndicator isActive={isCurrentActor} />
+        {!isDealFinished && <ActiveIndicator isActive={isCurrentActor} />}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <div className="font-semibold text-sm">{playerName}</div>
+            <div className="font-semibold text-sm">
+              {playerName}{" "}
+              <span className="text-xs text-muted-foreground font-normal">
+                ({player.kind === "human" ? "You" : "CPU"})
+              </span>
+            </div>
             {isWinner && (
               <div className="text-xs font-bold text-yellow-400">WINNER</div>
             )}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {player.kind === "human" ? "You" : "CPU"}
           </div>
           {!player.active && (
             <div className="text-xs text-destructive font-semibold">FOLDED</div>
@@ -89,22 +102,16 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
             )}
           <div className="pt-2 border-t space-y-1">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Stack:</span>
               <span className="font-semibold">{player.stack}</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Committed:</span>
-              <span className="font-semibold">
-                {player.committedThisStreet}
-              </span>
+              {lastAction && (
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-primary">
+                    {getActionLabel(lastAction)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
-          <PlayerCards
-            hand={deal.hands[player.seat] ?? { downCards: [], upCards: [] }}
-            playerKind={player.kind}
-            isActive={player.active}
-            isDealFinished={isDealFinished}
-          />
         </div>
       </div>
     </div>

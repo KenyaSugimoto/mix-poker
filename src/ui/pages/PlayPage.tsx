@@ -2,7 +2,8 @@ import type React from "react";
 import { useAppStore } from "../../app/store/appStore";
 import type { GameState } from "../../domain/types";
 import { ActionPanel } from "../components/play/ActionPanel";
-import { GameHeader } from "../components/play/GameHeader";
+import { DealInfo } from "../components/play/DealInfo";
+import { HamburgerMenu } from "../components/play/HamburgerMenu";
 import { TableView } from "../components/TableView/TableView";
 
 const StartDealButton: React.FC<{ game: GameState }> = ({ game }) => {
@@ -16,7 +17,7 @@ const StartDealButton: React.FC<{ game: GameState }> = ({ game }) => {
           seatOrder: game.players.map((p) => p.id),
         });
       }}
-      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90"
+      className="px-3 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 text-sm whitespace-nowrap"
     >
       Start New Deal
     </button>
@@ -76,42 +77,37 @@ export const PlayPage: React.FC = () => {
       : null;
 
   return (
-    <div className="h-full w-full flex flex-col p-6 space-y-6 overflow-hidden">
-      <div className="flex-shrink-0">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setScreen("HISTORY")}
-              className="px-4 py-2 bg-muted text-muted-foreground rounded hover:bg-muted/80"
-            >
-              履歴
-            </button>
-            <button
-              type="button"
-              onClick={() => setScreen("SETTINGS")}
-              className="px-4 py-2 bg-muted text-muted-foreground rounded hover:bg-muted/80"
-            >
-              設定
-            </button>
+    <div className="h-full w-full flex flex-col p-4 overflow-hidden">
+      {/* ハンバーガーメニュー */}
+      <div className="flex-shrink-0 flex justify-end mb-2">
+        <HamburgerMenu
+          onHistoryClick={() => setScreen("HISTORY")}
+          onSettingsClick={() => setScreen("SETTINGS")}
+        />
+      </div>
+      {/* 2行レイアウト: 1行目TableView、2行目GameHeader+ActionPanel */}
+      <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
+        {/* 1行目: TableView */}
+        <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+          <TableView deal={displayDeal} game={game} dealSummary={dealSummary} />
+        </div>
+        {/* 2行目: DealInfo + ActionPanel/StartDealButton（横並び） */}
+        <div className="flex-shrink-0 flex gap-3">
+          <div className="flex-shrink-0">
+            <DealInfo deal={displayDeal} dealIndex={game.dealIndex} />
+          </div>
+          <div className="flex-shrink-0">
+            {isDealFinished ? (
+              // TODO: 将来的にはボタンで手動実行ではなく、数秒後に自動的に新しいディールが開始されるようにする
+              <StartDealButton game={game} />
+            ) : (
+              <ActionPanel
+                deal={displayDeal}
+                currentSeat={displayDeal.currentActorIndex}
+              />
+            )}
           </div>
         </div>
-        <GameHeader deal={displayDeal} dealIndex={game.dealIndex} />
-      </div>
-      <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
-        <TableView deal={displayDeal} game={game} dealSummary={dealSummary} />
-      </div>
-      <div className="flex-shrink-0">
-        {isDealFinished ? (
-          <div className="flex justify-center">
-            <StartDealButton game={game} />
-          </div>
-        ) : (
-          <ActionPanel
-            deal={displayDeal}
-            currentSeat={displayDeal.currentActorIndex}
-          />
-        )}
       </div>
     </div>
   );
