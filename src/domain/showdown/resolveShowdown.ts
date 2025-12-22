@@ -46,7 +46,7 @@ const rankToNumber = (rank: Card["rank"]): number => {
 /**
  * カード配列をランクでグループ化
  */
-const groupByRank = (cards: Card[]): Map<number, Card[]> => {
+export const groupByRank = (cards: Card[]): Map<number, Card[]> => {
   const groups = new Map<number, Card[]>();
   for (const card of cards) {
     const rank = rankToNumber(card.rank);

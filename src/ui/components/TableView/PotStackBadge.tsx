@@ -11,7 +11,7 @@ const CHIP_HIGHLIGHT_SIZE = 18; // ハイライトのサイズ（%）
 
 // スタックのレイアウト定数
 const STACK_SPACING = 25; // スタック間の横方向の間隔（px）
-const STACK_VERTICAL_OFFSET = -2.5; // スタック内のチップの縦方向の重なり（px）
+const STACK_VERTICAL_OFFSET = -3; // スタック内のチップの縦方向の重なり（px）
 const STACK_BASE_HEIGHT = 30; // スタックのベース高さ（px）
 const STACK_HEIGHT_MULTIPLIER = 2.5; // スタックカウントから高さを計算する係数
 
@@ -142,7 +142,7 @@ const Chip: React.FC<{
         ].join(" ")}
         style={{ fontSize: `${CHIP_FONT_SIZE}px` }}
       >
-        {spec.label}
+        {/* {spec.label} */}
       </div>
     </div>
   );

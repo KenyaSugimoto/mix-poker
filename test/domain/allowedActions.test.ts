@@ -35,12 +35,95 @@ describe("getAllowedActions", () => {
     expect(actions).not.toContain("CHECK");
   });
 
-  it("3rdストリートでBRING_IN後の場合、CALL, FOLD, RAISE が許可されること", () => {
-    const state = { ...baseState, currentBet: 20 };
+  it("3rdストリートでBRING_IN後の場合、CALL, FOLD, COMPLETE が許可され、RAISE が許可されないこと", () => {
+    const state = {
+      ...baseState,
+      currentBet: 20, // bringIn
+      players: [
+        {
+          seat: 0,
+          kind: "human",
+          active: true,
+          stack: 1000,
+          committedTotal: 0,
+          committedThisStreet: 0, // まだコミットしていない
+        },
+        {
+          seat: 1,
+          kind: "cpu",
+          active: true,
+          stack: 1000,
+          committedTotal: 0,
+          committedThisStreet: 0,
+        },
+      ],
+    };
+    const actions = getAllowedActions(state);
+    expect(actions).toContain("CALL");
+    expect(actions).toContain("FOLD");
+    expect(actions).toContain("COMPLETE");
+    expect(actions).not.toContain("RAISE");
+  });
+
+  it("3rdストリートでBRING_IN後に既にコミットしている場合、COMPLETE が許可されないこと", () => {
+    const state = {
+      ...baseState,
+      currentBet: 20, // bringIn
+      players: [
+        {
+          seat: 0,
+          kind: "human",
+          active: true,
+          stack: 1000,
+          committedTotal: 20,
+          committedThisStreet: 20, // 既にbring-inをコミット済み
+        },
+        {
+          seat: 1,
+          kind: "cpu",
+          active: true,
+          stack: 1000,
+          committedTotal: 0,
+          committedThisStreet: 0,
+        },
+      ],
+    };
+    const actions = getAllowedActions(state);
+    expect(actions).toContain("CALL");
+    expect(actions).toContain("FOLD");
+    expect(actions).not.toContain("COMPLETE");
+    expect(actions).not.toContain("RAISE");
+  });
+
+  it("3rdストリートでCOMPLETE後の場合、CALL, FOLD, RAISE が許可され、COMPLETE が許可されないこと", () => {
+    const state = {
+      ...baseState,
+      currentBet: 40, // smallBet（complete後）
+      raiseCount: 0,
+      players: [
+        {
+          seat: 0,
+          kind: "human",
+          active: true,
+          stack: 1000,
+          committedTotal: 0,
+          committedThisStreet: 0,
+        },
+        {
+          seat: 1,
+          kind: "cpu",
+          active: true,
+          stack: 1000,
+          committedTotal: 0,
+          committedThisStreet: 0,
+        },
+      ],
+    };
     const actions = getAllowedActions(state);
     expect(actions).toContain("CALL");
     expect(actions).toContain("FOLD");
     expect(actions).toContain("RAISE");
+    expect(actions).not.toContain("COMPLETE");
   });
 
   it("4thストリートでベットがない場合、CHECK と BET が許可されること", () => {

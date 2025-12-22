@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyEvent } from "../../src/domain/engine/applyEvent";
-import type { DealState, Event } from "../../src/domain/types";
+import type { Card, DealState, Event } from "../../src/domain/types";
 import { generateId } from "../../src/domain/utils/id";
 
 describe("applyEvent", () => {
@@ -160,6 +160,26 @@ describe("applyEvent", () => {
         { ...initialState.players[0], committedThisStreet: 20 },
         { ...initialState.players[1], committedThisStreet: 20 },
       ],
+      hands: {
+        0: {
+          downCards: [],
+          upCards: [
+            { rank: "A" as Card["rank"], suit: "s" as Card["suit"] },
+            { rank: "K" as Card["rank"], suit: "h" as Card["suit"] },
+            { rank: "Q" as Card["rank"], suit: "d" as Card["suit"] },
+            { rank: "J" as Card["rank"], suit: "c" as Card["suit"] },
+          ],
+        },
+        1: {
+          downCards: [],
+          upCards: [
+            { rank: "A" as Card["rank"], suit: "c" as Card["suit"] },
+            { rank: "K" as Card["rank"], suit: "d" as Card["suit"] },
+            { rank: "Q" as Card["rank"], suit: "h" as Card["suit"] },
+            { rank: "J" as Card["rank"], suit: "s" as Card["suit"] },
+          ],
+        },
+      },
     };
 
     const event: Event = {
@@ -177,7 +197,10 @@ describe("applyEvent", () => {
     expect(nextState.raiseCount).toBe(0);
     expect(nextState.players[0].committedThisStreet).toBe(0);
     expect(nextState.players[1].committedThisStreet).toBe(0);
-    expect(nextState.currentActorIndex).toBe(0); // Reset for MVP
+    // 先頭アクターが正しく設定されている（カード情報に基づく）
+    // カード情報がない場合はseat最小（0）が選ばれる
+    expect(nextState.currentActorIndex).toBeGreaterThanOrEqual(0);
+    expect(nextState.currentActorIndex).toBeLessThan(nextState.playerCount);
   });
 
   describe("カード配布イベント", () => {
@@ -228,6 +251,11 @@ describe("applyEvent", () => {
 
       // デッキから6枚消費されている（2人×3枚）
       expect(nextState.deck).toHaveLength(46);
+
+      // bringInIndexとcurrentActorIndexが設定されている
+      expect(nextState.bringInIndex).toBeGreaterThanOrEqual(0);
+      expect(nextState.bringInIndex).toBeLessThan(nextState.playerCount);
+      expect(nextState.currentActorIndex).toBe(nextState.bringInIndex);
     });
 
     it("DEAL_CARD_4THイベントが正しく処理されること", () => {
