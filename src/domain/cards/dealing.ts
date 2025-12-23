@@ -165,4 +165,3 @@ export const getAllCardsForSeat = (
   if (!hand) return [];
   return [...hand.downCards, ...hand.upCards];
 };
-
