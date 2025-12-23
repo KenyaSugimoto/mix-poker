@@ -270,11 +270,19 @@ const buildUpcardsScoreRazz = (upCards: Card[]): number[] => {
   const maxCount = Math.max(...groups.map((g) => g.count));
 
   if (maxCount === 4) {
-    const quadRank = groups.find((g) => g.count === 4)!.rank;
+    const quadGroup = groups.find((g) => g.count === 4);
+    if (!quadGroup) {
+      throw new Error("Expected quad group not found");
+    }
+    const quadRank = quadGroup.rank;
     return [0, inv(quadRank)];
   }
   if (maxCount === 3) {
-    const tripRank = groups.find((g) => g.count === 3)!.rank;
+    const tripGroup = groups.find((g) => g.count === 3);
+    if (!tripGroup) {
+      throw new Error("Expected trip group not found");
+    }
+    const tripRank = tripGroup.rank;
     const kickers = groups
       .filter((g) => g.count === 1)
       .map((g) => inv(g.rank))

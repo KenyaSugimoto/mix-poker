@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getAllowedActions } from "../../src/domain/rules/allowedActions";
-import type { DealState } from "../../src/domain/types";
+import type { DealState, PlayerKind } from "../../src/domain/types";
 
 describe("getAllowedActions", () => {
   const baseState: DealState = {
@@ -42,7 +42,7 @@ describe("getAllowedActions", () => {
       players: [
         {
           seat: 0,
-          kind: "human",
+          kind: "human" as PlayerKind,
           active: true,
           stack: 1000,
           committedTotal: 0,
@@ -50,7 +50,7 @@ describe("getAllowedActions", () => {
         },
         {
           seat: 1,
-          kind: "cpu",
+          kind: "cpu" as PlayerKind,
           active: true,
           stack: 1000,
           committedTotal: 0,
@@ -72,7 +72,7 @@ describe("getAllowedActions", () => {
       players: [
         {
           seat: 0,
-          kind: "human",
+          kind: "human" as PlayerKind,
           active: true,
           stack: 1000,
           committedTotal: 20,
@@ -80,7 +80,7 @@ describe("getAllowedActions", () => {
         },
         {
           seat: 1,
-          kind: "cpu",
+          kind: "cpu" as PlayerKind,
           active: true,
           stack: 1000,
           committedTotal: 0,
@@ -103,7 +103,7 @@ describe("getAllowedActions", () => {
       players: [
         {
           seat: 0,
-          kind: "human",
+          kind: "human" as PlayerKind,
           active: true,
           stack: 1000,
           committedTotal: 0,
@@ -111,7 +111,7 @@ describe("getAllowedActions", () => {
         },
         {
           seat: 1,
-          kind: "cpu",
+          kind: "cpu" as PlayerKind,
           active: true,
           stack: 1000,
           committedTotal: 0,
@@ -133,8 +133,8 @@ describe("getAllowedActions", () => {
     expect(actions).toContain("BET");
   });
 
-  it("raiseCountが3（キャップ）の場合、RAISE が許可されないこと", () => {
-    const state = { ...baseState, currentBet: 40, raiseCount: 3 };
+  it("raiseCountが4（キャップ）の場合、RAISE が許可されないこと", () => {
+    const state = { ...baseState, currentBet: 40, raiseCount: 4 };
     const actions = getAllowedActions(state);
     expect(actions).not.toContain("RAISE");
     expect(actions).toContain("CALL");

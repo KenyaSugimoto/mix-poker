@@ -9,6 +9,7 @@ import type {
   DealState,
   GameType,
   PlayerHand,
+  PlayerKind,
   SeatIndex,
 } from "../../src/domain/types";
 
@@ -20,7 +21,7 @@ describe("getNextActor", () => {
     players: [
       {
         seat: 0,
-        kind: "human",
+        kind: "human" as PlayerKind,
         active: true,
         stack: 1000,
         committedTotal: 0,
@@ -28,7 +29,7 @@ describe("getNextActor", () => {
       },
       {
         seat: 1,
-        kind: "cpu",
+        kind: "cpu" as PlayerKind,
         active: true,
         stack: 1000,
         committedTotal: 0,
@@ -36,7 +37,7 @@ describe("getNextActor", () => {
       },
       {
         seat: 2,
-        kind: "cpu",
+        kind: "cpu" as PlayerKind,
         active: true,
         stack: 1000,
         committedTotal: 0,
@@ -342,7 +343,6 @@ describe("computeBringInIndex", () => {
   });
 });
 
-
 const c = (rank: Card["rank"], suit: Card["suit"] = "c"): Card => ({
   rank,
   suit,
@@ -356,7 +356,7 @@ const hand = (upRanks: Card["rank"][]): PlayerHand =>
     ),
   }) as PlayerHand;
 
-const makeHands = (
+const makeUpCards = (
   spec: Record<number, Card["rank"][]>,
 ): Record<number, PlayerHand> => {
   const out: Record<number, PlayerHand> = {};
@@ -366,88 +366,162 @@ const makeHands = (
 
 describe("pickFirstActorFromUpcards", () => {
   describe("Stud Hi / Stud8（upcards強い人が先頭）", () => {
-    it("フォーカード > トリップス > ペア > ハイカード の優先順位で選ばれる", () => {
-      const gameType: GameType = "studHi";
-      const activeSeats: SeatIndex[] = [0, 1, 2, 3];
+    describe("4th Street", () => {
+      it("ペア > ハイカード の優先順位で選ばれる", () => {
+        const gameType: GameType = "studHi";
+        const activeSeats: SeatIndex[] = [0, 1];
 
-      const hands = makeHands({
-        0: ["A", "K", "Q", "J"], // high
-        1: ["9", "9", "2", "3"], // pair
-        2: ["5", "5", "5", "K"], // trips
-        3: ["7", "7", "7", "7"], // quads
+        const hands = makeUpCards({
+          0: ["A", "K", "Q"], // high
+          1: ["9", "9", "2"], // pair
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
       });
 
-      expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(3);
+      it("同カテゴリ（ハイカード）は大きいランクが高い方が強い（辞書式）", () => {
+        const gameType: GameType = "stud8";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        // seat0: A Q
+        // seat1: A 9
+        // 先頭比較：A同士 → Q vs 9で seat0 が強い
+        const hands = makeUpCards({
+          0: ["A", "Q"],
+          1: ["A", "9"],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
+      });
     });
+    describe("5th Street", () => {
+      it("トリップス > ペア > ハイカード の優先順位で選ばれる", () => {
+        const gameType: GameType = "studHi";
+        const activeSeats: SeatIndex[] = [0, 1, 2];
 
-    it("同カテゴリ（ハイカード）は大きいランクが高い方が強い（辞書式）", () => {
-      const gameType: GameType = "stud8";
-      const activeSeats: SeatIndex[] = [0, 1];
+        const hands = makeUpCards({
+          0: ["A", "K", "Q"], // high
+          1: ["9", "9", "2"], // pair
+          2: ["5", "5", "5"], // trips
+        });
 
-      // seat0: A K 9 2
-      // seat1: A Q J T
-      // 先頭比較：A同士 → 次のK(13) vs Q(12)で seat0 が強い
-      const hands = makeHands({
-        0: ["A", "K", "9", "2"],
-        1: ["A", "Q", "J", "T"],
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(2);
       });
 
-      expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
+      it("同カテゴリ（ハイカード）は大きいランクが高い方が強い（辞書式）", () => {
+        const gameType: GameType = "stud8";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        // seat0: A K Q
+        // seat1: A K 9
+        // 先頭比較：A同士 → K同士 → Q vs 9で seat0 が強い
+        const hands = makeUpCards({
+          0: ["A", "K", "Q"],
+          1: ["A", "K", "9"],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
+      });
+
+      it("同カテゴリ（ペア）は ペアランク → キッカー降順 で比較される", () => {
+        const gameType: GameType = "stud8";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        // seat0: A A 2
+        // seat1: A A 3
+        // ペアランク：A同士 → キッカー 2 vs 3 で seat1が強い
+        const hands = makeUpCards({
+          0: ["A", "A", "2"],
+          1: ["A", "A", "3"],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
+      });
     });
+    describe("6th, 7th Street", () => {
+      it("フォーカード > トリップス > ペア > ハイカード の優先順位で選ばれる", () => {
+        const gameType: GameType = "studHi";
+        const activeSeats: SeatIndex[] = [0, 1, 2, 3];
 
-    it("同カテゴリ（ペア）は ペアランク → キッカー降順 で比較される", () => {
-      const gameType: GameType = "studHi";
-      const activeSeats: SeatIndex[] = [0, 1];
+        const hands = makeUpCards({
+          0: ["A", "K", "Q", "J"], // high
+          1: ["9", "9", "2", "3"], // pair
+          2: ["5", "5", "5", "K"], // trips
+          3: ["7", "7", "7", "7"], // quads
+        });
 
-      // 両方ペアKだが、キッカーで比較
-      // seat0: K K A 2
-      // seat1: K K Q J
-      // キッカー：A > Q なので seat0
-      const hands = makeHands({
-        0: ["K", "K", "A", "2"],
-        1: ["K", "K", "Q", "J"],
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(3);
       });
 
-      expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
-    });
+      it("同カテゴリ（ハイカード）は大きいランクが高い方が強い（辞書式）", () => {
+        const gameType: GameType = "stud8";
+        const activeSeats: SeatIndex[] = [0, 1];
 
-    it("ツーペアが出た場合も安定して比較できる（pairs降順→kicker）", () => {
-      const gameType: GameType = "studHi";
-      const activeSeats: SeatIndex[] = [0, 1];
+        // seat0: A K 9 2
+        // seat1: A Q J T
+        // 先頭比較：A同士 → 次のK(13) vs Q(12)で seat0 が強い
+        const hands = makeUpCards({
+          0: ["A", "K", "9", "2"],
+          1: ["A", "Q", "J", "T"],
+        });
 
-      // seat0: K K Q Q （kickerなし）
-      // seat1: K K J J
-      // pairs比較：2ndペア Q(12) > J(11) で seat0
-      const hands = makeHands({
-        0: ["K", "K", "Q", "Q"],
-        1: ["K", "K", "J", "J"],
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
       });
 
-      expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
-    });
+      it("同カテゴリ（ペア）は ペアランク → キッカー降順 で比較される", () => {
+        const gameType: GameType = "studHi";
+        const activeSeats: SeatIndex[] = [0, 1];
 
-    it("同スコア（完全同一）なら seat の小さい方が選ばれる", () => {
-      const gameType: GameType = "stud8";
-      const activeSeats: SeatIndex[] = [5, 2];
+        // 両方ペアKだが、キッカーで比較
+        // seat0: K K A 2
+        // seat1: K K Q J
+        // キッカー：A > Q なので seat0
+        const hands = makeUpCards({
+          0: ["K", "K", "A", "2"],
+          1: ["K", "K", "Q", "J"],
+        });
 
-      // upcardsが同一（スートは無視される前提）
-      const hands = makeHands({
-        5: ["A", "K", "Q", "J"],
-        2: ["A", "K", "Q", "J"],
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
       });
 
-      expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(2);
-    });
+      it("ツーペアが出た場合も安定して比較できる（pairs降順→kicker）", () => {
+        const gameType: GameType = "studHi";
+        const activeSeats: SeatIndex[] = [0, 1];
 
-    it("activeSeats の並び順に依存せず、強い人が選ばれる", () => {
-      const gameType: GameType = "studHi";
-      const hands = makeHands({
-        0: ["A", "K", "Q", "J"], // high
-        1: ["9", "9", "2", "3"], // pair
+        // seat0: K K Q Q （kickerなし）
+        // seat1: K K J J
+        // pairs比較：2ndペア Q(12) > J(11) で seat0
+        const hands = makeUpCards({
+          0: ["K", "K", "Q", "Q"],
+          1: ["K", "K", "J", "J"],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
       });
 
-      expect(pickFirstActorFromUpcards(gameType, [0, 1], hands)).toBe(1);
-      expect(pickFirstActorFromUpcards(gameType, [1, 0], hands)).toBe(1);
+      it("同スコア（完全同一）なら seat の小さい方が選ばれる", () => {
+        const gameType: GameType = "stud8";
+        const activeSeats: SeatIndex[] = [5, 2];
+
+        // upcardsが同一（スートは無視される前提）
+        const hands = makeUpCards({
+          5: ["A", "K", "Q", "J"],
+          2: ["A", "K", "Q", "J"],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(2);
+      });
+
+      it("activeSeats の並び順に依存せず、強い人が選ばれる", () => {
+        const gameType: GameType = "studHi";
+        const hands = makeUpCards({
+          0: ["A", "K", "Q", "J"], // high
+          1: ["9", "9", "2", "3"], // pair
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, [0, 1], hands)).toBe(1);
+        expect(pickFirstActorFromUpcards(gameType, [1, 0], hands)).toBe(1);
+      });
     });
   });
 
@@ -456,7 +530,7 @@ describe("pickFirstActorFromUpcards", () => {
       const gameType: GameType = "razz";
       const activeSeats: SeatIndex[] = [0, 1, 2, 3];
 
-      const hands = makeHands({
+      const hands = makeUpCards({
         0: ["2", "2", "7", "9"], // pair
         1: ["A", "3", "5", "7"], // high（最優先）
         2: ["5", "5", "5", "K"], // trips
@@ -472,7 +546,7 @@ describe("pickFirstActorFromUpcards", () => {
 
       // seat0: 9 8 7 A（最大9）
       // seat1: 8 4 3 2（最大8） → 最大が小さい seat1 が強い
-      const hands = makeHands({
+      const hands = makeUpCards({
         0: ["9", "8", "7", "A"],
         1: ["8", "4", "3", "2"],
       });
@@ -486,7 +560,7 @@ describe("pickFirstActorFromUpcards", () => {
 
       // seat0: ペア2（強い）
       // seat1: ペア9（弱い）
-      const hands = makeHands({
+      const hands = makeUpCards({
         0: ["2", "2", "A", "K"],
         1: ["9", "9", "3", "4"],
       });
@@ -498,7 +572,7 @@ describe("pickFirstActorFromUpcards", () => {
       const gameType: GameType = "razz";
       const activeSeats: SeatIndex[] = [4, 1];
 
-      const hands = makeHands({
+      const hands = makeUpCards({
         4: ["8", "6", "4", "2"],
         1: ["8", "6", "4", "2"],
       });
@@ -508,7 +582,7 @@ describe("pickFirstActorFromUpcards", () => {
 
     it("activeSeats の並び順に依存しない", () => {
       const gameType: GameType = "razz";
-      const hands = makeHands({
+      const hands = makeUpCards({
         0: ["2", "2", "7", "9"], // pair
         1: ["A", "3", "5", "7"], // high（最優先）
       });
@@ -521,7 +595,7 @@ describe("pickFirstActorFromUpcards", () => {
       const gameType: GameType = "razz";
       const activeSeats: SeatIndex[] = [0, 1];
 
-      const hands = makeHands({
+      const hands = makeUpCards({
         1: ["A", "3", "5", "7"], // high
       });
 

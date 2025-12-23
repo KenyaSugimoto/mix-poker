@@ -7,7 +7,7 @@ export const getAllowedActions = (state: DealState): EventType[] => {
   if (state.dealFinished) return [];
 
   const actions: EventType[] = [];
-  const { street, currentBet, raiseCount, bringIn, smallBet } = state;
+  const { street, currentBet, raiseCount, bringIn } = state;
   const currentPlayer = state.players[state.currentActorIndex];
 
   // 3rdストリート特有のルール
@@ -31,8 +31,8 @@ export const getAllowedActions = (state: DealState): EventType[] => {
       // 許可：fold / call / raise（cap未到達時）
       actions.push("CALL");
       actions.push("FOLD");
-      if (raiseCount < 3) {
-        // 一般的な上限（キャップ）
+      if (raiseCount < 4) {
+        // 5bet cap
         actions.push("RAISE");
       }
       // COMPLETEは許可しない
@@ -45,7 +45,8 @@ export const getAllowedActions = (state: DealState): EventType[] => {
     } else {
       actions.push("CALL");
       actions.push("FOLD");
-      if (raiseCount < 3) {
+      if (raiseCount < 4) {
+        // 5bet cap
         actions.push("RAISE");
       }
     }
