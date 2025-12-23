@@ -6,7 +6,11 @@ import {
   dealCardUp,
   shuffleDeck,
 } from "../cards/dealing";
-import { getNextActor } from "../rules/actor";
+import {
+  computeBringInIndex,
+  getNextActor,
+  pickFirstActorFromUpcards,
+} from "../rules/actor";
 import type {
   BetEvent,
   BringInEvent,
@@ -195,9 +199,14 @@ const handleStreetAdvance = (
     p.committedThisStreet = 0;
   }
 
-  // 最初のアクターを決定（3rdはブリングイン、他はルールに基づく）
-  // MVPではとりあえず 0 に戻すか、状況に合わせて調整
-  draft.currentActorIndex = 0;
+  // 最初のアクターを決定（3rdはブリングイン、4th以降はアップカード構成に基づく）
+  if (nextStreet) {
+    draft.currentActorIndex = pickFirstActorFromUpcards(
+      draft.gameType,
+      draft.players.filter((p) => p.active).map((p) => p.seat),
+      draft.hands,
+    );
+  }
 };
 
 const handleDealInit = (draft: Draft<DealState>, event: DealInitEvent) => {
@@ -223,6 +232,11 @@ const handleDealCards3rd = (
   const result = dealCards3rd(draft.deck, activeSeats, draft.hands);
   draft.deck = result.deck;
   draft.hands = result.hands;
+
+  // カード配布後にbring-in対象者を決定
+  draft.bringInIndex = computeBringInIndex(draft);
+  // bring-inの最初のアクターはbringInIndex
+  draft.currentActorIndex = draft.bringInIndex;
 };
 
 const handleDealCardUp = (draft: Draft<DealState>, _event: DealCardEvent) => {
