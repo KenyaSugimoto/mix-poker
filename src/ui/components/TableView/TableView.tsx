@@ -1,5 +1,7 @@
 import type React from "react";
+import { evaluateStudHi } from "../../../domain/showdown/resolveShowdown";
 import type { DealState, DealSummary, GameState } from "../../../domain/types";
+import { getHandRankLabel } from "../../utils/handRankLabel";
 import { PotStackBadge } from "./PotStackBadge";
 import { SeatPanel } from "./SeatPanel";
 
@@ -14,6 +16,23 @@ export const TableView: React.FC<TableViewProps> = ({
   game,
   dealSummary,
 }) => {
+  // 役の計算（dealFinished時のみ）
+  const handRankLabels: Record<number, string | null> = {};
+  if (deal.dealFinished) {
+    for (const seat of Object.keys(deal.hands)) {
+      const seatIdx = Number(seat);
+      const player = deal.players.find((p) => p.seat === seatIdx);
+      if (player?.active) {
+        const hand = deal.hands[seatIdx];
+        const cards = [...hand.downCards, ...hand.upCards];
+        if (cards.length >= 5) {
+          const result = evaluateStudHi(cards);
+          handRankLabels[seatIdx] = getHandRankLabel(result.rank);
+        }
+      }
+    }
+  }
+
   // 勝者情報をseatIndexベースに変換
   const winnerSeats = new Set<number>();
   if (dealSummary) {
@@ -79,6 +98,7 @@ export const TableView: React.FC<TableViewProps> = ({
             isDealFinished={deal.dealFinished}
             isWinner={isWinner}
             winningsAmount={winningsAmount}
+            handRankLabel={handRankLabels[player.seat] ?? null}
           />
         );
       })}
