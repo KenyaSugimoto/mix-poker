@@ -15,7 +15,8 @@ interface SeatPanelProps {
   isDealFinished: boolean; // ディールが終了しているかどうか
   isWinner?: boolean; // 勝者かどうか
   winningsAmount?: number | null; // 獲得額（正の値のみ）
-  handRankLabel?: string | null; // 役の日本語ラベル
+  handRankLabel?: string | null; // High役の日本語ラベル
+  lowRankLabel?: string | null; // Low役のラベル
 }
 
 export const SeatPanel: React.FC<SeatPanelProps> = ({
@@ -30,6 +31,7 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
   isWinner = false,
   winningsAmount = null,
   handRankLabel = null,
+  lowRankLabel = null,
 }) => {
   // Hero（Human）は常に下部中央（6時の位置）に配置
   // 他のプレイヤーは時計回りに配置
@@ -94,7 +96,16 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
           </div>
           {isDealFinished && player.active && handRankLabel && (
             <div className="text-xs font-semibold text-blue-400">
-              {handRankLabel}
+              High: {handRankLabel}
+            </div>
+          )}
+          {isDealFinished && player.active && lowRankLabel && (
+            <div
+              className={`text-xs font-semibold ${
+                lowRankLabel === "ローなし" ? "text-gray-400" : "text-green-400"
+              }`}
+            >
+              Low: {lowRankLabel}
             </div>
           )}
           {!player.active && (
