@@ -341,6 +341,266 @@ describe("applyEvent", () => {
       expect(nextState.deck).toHaveLength(44);
     });
 
+    it("DEAL_CARD_6TH後に先頭アクターがアップカードに基づいて決定されること（ペア > ハイカード）", () => {
+      // 5thまでの状態: seat0はAハイカード、seat1はハイカード
+      const state5th: DealState = {
+        ...initialState,
+        street: "5th",
+        deck: [
+          // seat0には9が配られる（ペアにならない）
+          { rank: "9", suit: "c" } as Card,
+          // seat1には7が配られる（7のペアになる）
+          { rank: "7", suit: "d" } as Card,
+        ],
+        hands: {
+          0: {
+            downCards: [
+              { rank: "2", suit: "c" } as Card,
+              { rank: "3", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "A", suit: "s" } as Card, // 3rd
+              { rank: "K", suit: "h" } as Card, // 4th
+              { rank: "Q", suit: "d" } as Card, // 5th
+            ],
+          },
+          1: {
+            downCards: [
+              { rank: "4", suit: "c" } as Card,
+              { rank: "5", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "7", suit: "s" } as Card, // 3rd - 7
+              { rank: "8", suit: "h" } as Card, // 4th
+              { rank: "6", suit: "d" } as Card, // 5th
+            ],
+          },
+        },
+      };
+
+      // DEAL_CARD_6TH イベント
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_CARD_6TH",
+        seat: null,
+        street: "6th",
+        timestamp: Date.now(),
+      };
+
+      const nextState = applyEvent(state5th, event);
+
+      // 各seatのアップカードを確認
+      // seat0: A K Q 9 (ハイカード)
+      // seat1: 7 8 6 7 (ペア)
+      expect(nextState.hands[0].upCards).toHaveLength(4);
+      expect(nextState.hands[1].upCards).toHaveLength(4);
+
+      // ペアを持つseat1が先頭アクターになる
+      expect(nextState.currentActorIndex).toBe(1);
+    });
+
+    it("DEAL_CARD_4TH後に先頭アクターがアップカードに基づいて決定されること", () => {
+      // 3rdまでの状態: seat0は2、seat1はA
+      const state3rd: DealState = {
+        ...initialState,
+        street: "3rd",
+        deck: [
+          // seat0には2が配られる（2のペアになる）
+          { rank: "2", suit: "d" } as Card,
+          // seat1にはKが配られる（ハイカード）
+          { rank: "K", suit: "d" } as Card,
+        ],
+        hands: {
+          0: {
+            downCards: [
+              { rank: "3", suit: "c" } as Card,
+              { rank: "4", suit: "c" } as Card,
+            ],
+            upCards: [{ rank: "2", suit: "s" } as Card], // 3rd - 2
+          },
+          1: {
+            downCards: [
+              { rank: "5", suit: "c" } as Card,
+              { rank: "6", suit: "c" } as Card,
+            ],
+            upCards: [{ rank: "A", suit: "s" } as Card], // 3rd - A
+          },
+        },
+      };
+
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_CARD_4TH",
+        seat: null,
+        street: "4th",
+        timestamp: Date.now(),
+      };
+
+      const nextState = applyEvent(state3rd, event);
+
+      // seat0: 2 2 (ペア) vs seat1: A K (ハイカード)
+      // ペアを持つseat0が先頭アクターになる
+      expect(nextState.currentActorIndex).toBe(0);
+    });
+
+    it("DEAL_CARD_5TH後に先頭アクターがアップカードに基づいて決定されること", () => {
+      // 4thまでの状態
+      const state4th: DealState = {
+        ...initialState,
+        street: "4th",
+        deck: [
+          // seat0にはQが配られる（ハイカードのまま）
+          { rank: "Q", suit: "d" } as Card,
+          // seat1にはKが配られる（Kのペアになる）
+          { rank: "K", suit: "d" } as Card,
+        ],
+        hands: {
+          0: {
+            downCards: [
+              { rank: "2", suit: "c" } as Card,
+              { rank: "3", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "A", suit: "s" } as Card, // 3rd
+              { rank: "J", suit: "h" } as Card, // 4th
+            ],
+          },
+          1: {
+            downCards: [
+              { rank: "4", suit: "c" } as Card,
+              { rank: "5", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "K", suit: "s" } as Card, // 3rd - K
+              { rank: "T", suit: "h" } as Card, // 4th
+            ],
+          },
+        },
+      };
+
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_CARD_5TH",
+        seat: null,
+        street: "5th",
+        timestamp: Date.now(),
+      };
+
+      const nextState = applyEvent(state4th, event);
+
+      // seat0: A J Q (ハイカード) vs seat1: K T K (ペア)
+      // ペアを持つseat1が先頭アクターになる
+      expect(nextState.currentActorIndex).toBe(1);
+    });
+
+    it("DEAL_CARD_7TH後は先頭アクターが変わらないこと（ダウンカード配布のため）", () => {
+      // 6thまでの状態: seat0が先頭アクター
+      const state6th: DealState = {
+        ...initialState,
+        street: "6th",
+        currentActorIndex: 0, // seat0が先頭アクター
+        deck: [
+          // ダウンカードなので何が配られても先頭アクターは変わらない
+          { rank: "A", suit: "c" } as Card,
+          { rank: "K", suit: "c" } as Card,
+        ],
+        hands: {
+          0: {
+            downCards: [
+              { rank: "2", suit: "c" } as Card,
+              { rank: "3", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "9", suit: "s" } as Card,
+              { rank: "9", suit: "h" } as Card, // ペア
+              { rank: "8", suit: "d" } as Card,
+              { rank: "7", suit: "c" } as Card,
+            ],
+          },
+          1: {
+            downCards: [
+              { rank: "4", suit: "c" } as Card,
+              { rank: "5", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "A", suit: "s" } as Card,
+              { rank: "K", suit: "h" } as Card,
+              { rank: "Q", suit: "d" } as Card,
+              { rank: "J", suit: "c" } as Card, // ハイカード
+            ],
+          },
+        },
+      };
+
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_CARD_7TH",
+        seat: null,
+        street: "7th",
+        timestamp: Date.now(),
+      };
+
+      const nextState = applyEvent(state6th, event);
+
+      // 7thはダウンカードなので先頭アクターは変わらない
+      expect(nextState.currentActorIndex).toBe(0);
+    });
+
+    it("Razzでは弱いアップカード（ハイカード）を持つプレイヤーが先頭アクターになること", () => {
+      // Razz: ハイカード > ペア の優先順位
+      const stateRazz: DealState = {
+        ...initialState,
+        gameType: "razz",
+        street: "5th",
+        deck: [
+          // seat0には9が配られる（ハイカードのまま）
+          { rank: "9", suit: "c" } as Card,
+          // seat1には7が配られる（7のペアになる）
+          { rank: "7", suit: "d" } as Card,
+        ],
+        hands: {
+          0: {
+            downCards: [
+              { rank: "K", suit: "c" } as Card,
+              { rank: "Q", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "A", suit: "s" } as Card, // 3rd - A (Low)
+              { rank: "2", suit: "h" } as Card, // 4th
+              { rank: "3", suit: "d" } as Card, // 5th
+            ],
+          },
+          1: {
+            downCards: [
+              { rank: "J", suit: "c" } as Card,
+              { rank: "T", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "7", suit: "s" } as Card, // 3rd - 7
+              { rank: "8", suit: "h" } as Card, // 4th
+              { rank: "6", suit: "d" } as Card, // 5th
+            ],
+          },
+        },
+      };
+
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_CARD_6TH",
+        seat: null,
+        street: "6th",
+        timestamp: Date.now(),
+      };
+
+      const nextState = applyEvent(stateRazz, event);
+
+      // Razzでは:
+      // seat0: A 2 3 9 (ハイカード - 良いロー)
+      // seat1: 7 8 6 7 (ペア - 悪いロー)
+      // ハイカードを持つseat0が先頭アクターになる
+      expect(nextState.currentActorIndex).toBe(0);
+    });
+
     it("DEAL_CARD_7THイベントが正しく処理されること", () => {
       // DEAL_INITとDEAL_CARDS_3RDで初期化
       let state = applyEvent(initialState, {
