@@ -94,6 +94,17 @@ const storeCreator = (set: any, get: any): AppStore => ({
         set({ lastLoadError: "Version mismatch, state reset." });
       } else {
         set(loaded);
+        // 復元後、CPUターンを再開
+        const state = get();
+        if (state.game?.currentDeal && !state.game.currentDeal.dealFinished) {
+          const currentActor =
+            state.game.currentDeal.players[
+              state.game.currentDeal.currentActorIndex
+            ];
+          if (currentActor?.kind === "cpu") {
+            setTimeout(() => get().processCpuTurns(), 500);
+          }
+        }
       }
     }
   },
