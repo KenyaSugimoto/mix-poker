@@ -1,5 +1,6 @@
 import { produce } from "immer";
 import { create } from "zustand";
+import { devtools } from "zustand/middleware";
 import { runCpuTurn } from "../../domain/cpu/runner";
 import { applyEvent } from "../../domain/engine/applyEvent";
 import {
@@ -20,9 +21,9 @@ import { generateId } from "../../domain/utils/id";
 import type { AppState, FullStore, UiState } from "../types";
 import {
   loadAppState,
+  saveAppState,
   STORAGE_KEY,
   STORAGE_VERSION,
-  saveAppState,
 } from "./persistence";
 
 const MAX_FULL_RECENT = 10;
@@ -80,7 +81,9 @@ const DEFAULT_STATE: AppState = {
   lastLoadError: null,
 };
 
-export const useAppStore = create<AppStore>((set, get) => ({
+// ストア作成関数
+// biome-ignore lint/suspicious/noExplicitAny: Zustandのcreate関数の型定義
+const storeCreator = (set: any, get: any): AppStore => ({
   ...DEFAULT_STATE,
 
   initialize: () => {
@@ -494,4 +497,53 @@ export const useAppStore = create<AppStore>((set, get) => ({
       }),
     );
   },
-}));
+});
+
+// 開発環境でのみdevtools middlewareを適用してストアを作成
+export const useAppStore = import.meta.env.DEV
+  ? create<AppStore>()(
+      devtools(storeCreator, {
+        name: "AppStore",
+        // 大きなオブジェクトをフォーマットして表示
+        serialize: {
+          options: {
+            // biome-ignore lint/suspicious/noExplicitAny: JSON.stringifyのreplacer関数の型定義
+            replacer: (_key: any, value: any) => {
+              // 循環参照を避ける
+              if (typeof value === "object" && value !== null) {
+                try {
+                  JSON.stringify(value);
+                } catch {
+                  return "[Circular]";
+                }
+              }
+              return value;
+            },
+          },
+        },
+      }),
+    )
+  : create<AppStore>(storeCreator);
+
+// 開発環境でのみwindowオブジェクトにストアを割り当て（コンソールから直接アクセス可能にする）
+if (import.meta.env.DEV) {
+  // window.$storeでアクセス可能にする
+  (window as unknown as { $store: typeof useAppStore }).$store = useAppStore;
+
+  // 現在のstateを取得するヘルパー関数も追加
+  (window as unknown as { getState: () => AppStore }).getState = () =>
+    useAppStore.getState();
+
+  // コンソールに使い方を表示
+  console.log(
+    "%c🔍 Zustand DevTools",
+    "color: #4CAF50; font-weight: bold; font-size: 14px;",
+  );
+  console.log(
+    "%c使い方:",
+    "color: #2196F3; font-weight: bold;",
+    "\n- Redux DevTools拡張機能をインストールして使用",
+    "\n- コンソールで $store.getState() で現在のstateを確認",
+    "\n- または window.$store でストアに直接アクセス",
+  );
+}
