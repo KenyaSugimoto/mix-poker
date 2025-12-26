@@ -1,7 +1,11 @@
 import type React from "react";
-import { evaluateStudHi } from "../../../domain/showdown/resolveShowdown";
+import {
+  evaluateRazz,
+  evaluateStud8,
+  evaluateStudHi,
+} from "../../../domain/showdown/resolveShowdown";
 import type { DealState, DealSummary, GameState } from "../../../domain/types";
-import { getHandRankLabel } from "../../utils/handRankLabel";
+import { getHandRankLabel, getLowHandLabel } from "../../utils/handRankLabel";
 import { PotStackBadge } from "./PotStackBadge";
 import { SeatPanel } from "./SeatPanel";
 
@@ -18,6 +22,8 @@ export const TableView: React.FC<TableViewProps> = ({
 }) => {
   // 役の計算（dealFinished時のみ）
   const handRankLabels: Record<number, string | null> = {};
+  const lowRankLabels: Record<number, string | null> = {};
+
   if (deal.dealFinished) {
     for (const seat of Object.keys(deal.hands)) {
       const seatIdx = Number(seat);
@@ -26,8 +32,22 @@ export const TableView: React.FC<TableViewProps> = ({
         const hand = deal.hands[seatIdx];
         const cards = [...hand.downCards, ...hand.upCards];
         if (cards.length >= 5) {
-          const result = evaluateStudHi(cards);
-          handRankLabels[seatIdx] = getHandRankLabel(result.rank);
+          if (deal.gameType === "razz") {
+            // RazzはLowのみ
+            const lowResult = evaluateRazz(cards);
+            lowRankLabels[seatIdx] = getLowHandLabel(lowResult);
+          } else if (deal.gameType === "stud8") {
+            // Stud8はHigh/Low両方
+            const result = evaluateStud8(cards);
+            handRankLabels[seatIdx] = getHandRankLabel(result.high.rank);
+            lowRankLabels[seatIdx] = result.low
+              ? getLowHandLabel(result.low)
+              : "ローなし";
+          } else {
+            // StudHiはHighのみ
+            const result = evaluateStudHi(cards);
+            handRankLabels[seatIdx] = getHandRankLabel(result.rank);
+          }
         }
       }
     }
@@ -99,6 +119,7 @@ export const TableView: React.FC<TableViewProps> = ({
             isWinner={isWinner}
             winningsAmount={winningsAmount}
             handRankLabel={handRankLabels[player.seat] ?? null}
+            lowRankLabel={lowRankLabels[player.seat] ?? null}
           />
         );
       })}
