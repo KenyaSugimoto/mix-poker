@@ -185,61 +185,59 @@ const storeCreator = (set: any, get: any): AppStore => ({
         const nextDeal = applyEvent(state.game.currentDeal, event);
         state.game.currentDeal = nextDeal;
 
-        // ストリート終了判定
+        // ストリート終了判定（STREET_ADVANCEのみここで処理、DEAL_ENDは外部で処理）
         const endEvent = checkStreetEndCondition(nextDeal);
-        if (endEvent) {
+        if (endEvent && endEvent.type === "STREET_ADVANCE") {
           const afterEndDeal = applyEvent(nextDeal, endEvent);
           state.game.currentDeal = afterEndDeal;
 
           // STREET_ADVANCEの場合は次のストリートのカード配布イベントを発火
-          if (endEvent.type === "STREET_ADVANCE") {
-            const nextStreet = afterEndDeal.street;
-            let dealCardEvent: DealCardEvent | null = null;
+          const nextStreet = afterEndDeal.street;
+          let dealCardEvent: DealCardEvent | null = null;
 
-            switch (nextStreet) {
-              case "4th":
-                dealCardEvent = {
-                  id: generateId(),
-                  type: "DEAL_CARD_4TH",
-                  seat: null,
-                  street: "4th",
-                  timestamp: Date.now(),
-                };
-                break;
-              case "5th":
-                dealCardEvent = {
-                  id: generateId(),
-                  type: "DEAL_CARD_5TH",
-                  seat: null,
-                  street: "5th",
-                  timestamp: Date.now(),
-                };
-                break;
-              case "6th":
-                dealCardEvent = {
-                  id: generateId(),
-                  type: "DEAL_CARD_6TH",
-                  seat: null,
-                  street: "6th",
-                  timestamp: Date.now(),
-                };
-                break;
-              case "7th":
-                dealCardEvent = {
-                  id: generateId(),
-                  type: "DEAL_CARD_7TH",
-                  seat: null,
-                  street: "7th",
-                  timestamp: Date.now(),
-                };
-                break;
-            }
+          switch (nextStreet) {
+            case "4th":
+              dealCardEvent = {
+                id: generateId(),
+                type: "DEAL_CARD_4TH",
+                seat: null,
+                street: "4th",
+                timestamp: Date.now(),
+              };
+              break;
+            case "5th":
+              dealCardEvent = {
+                id: generateId(),
+                type: "DEAL_CARD_5TH",
+                seat: null,
+                street: "5th",
+                timestamp: Date.now(),
+              };
+              break;
+            case "6th":
+              dealCardEvent = {
+                id: generateId(),
+                type: "DEAL_CARD_6TH",
+                seat: null,
+                street: "6th",
+                timestamp: Date.now(),
+              };
+              break;
+            case "7th":
+              dealCardEvent = {
+                id: generateId(),
+                type: "DEAL_CARD_7TH",
+                seat: null,
+                street: "7th",
+                timestamp: Date.now(),
+              };
+              break;
+          }
 
-            if (dealCardEvent) {
-              // カード配布イベントを適用
-              const afterDeal = applyEvent(afterEndDeal, dealCardEvent);
-              state.game.currentDeal = afterDeal;
-            }
+          if (dealCardEvent) {
+            // カード配布イベントを適用
+            const afterDeal = applyEvent(afterEndDeal, dealCardEvent);
+            state.game.currentDeal = afterDeal;
           }
         }
       }),

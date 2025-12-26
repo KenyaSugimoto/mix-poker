@@ -165,12 +165,8 @@ const handleFold = (draft: Draft<DealState>, event: FoldEvent) => {
     draft.pendingResponseCount -= 1;
   }
   // checkフェーズ（currentBet === 0）の場合はchecksThisStreetは増やさない
-
-  // 1人しか残っていないかチェック
-  const activeCount = draft.players.filter((p) => p.active).length;
-  if (activeCount <= 1) {
-    draft.dealFinished = true;
-  }
+  // 注意: dealFinishedはcheckStreetEndCondition経由で設定される
+  // applyEvent単体ではdealFinishedを設定しない（終了判定の一本化）
 };
 
 const handleCheck = (draft: Draft<DealState>, _event: CheckEvent) => {

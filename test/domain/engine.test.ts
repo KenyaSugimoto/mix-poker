@@ -122,7 +122,53 @@ describe("applyEvent", () => {
     };
     const finalState = applyEvent(intermediateState, foldEvent);
     expect(finalState.players[1].active).toBe(false);
-    expect(finalState.dealFinished).toBe(true);
+    // dealFinishedはcheckStreetEndCondition経由で設定されるため、
+    // applyEvent単体ではfalseのまま
+    expect(finalState.dealFinished).toBe(false);
+  });
+
+  it("FOLDイベントでpendingResponseCountが減ること（攻撃フェーズ）", () => {
+    // BRING_IN後の状態（攻撃フェーズ、pendingResponseCount = 1）
+    const intermediateState = applyEvent(initialState, {
+      id: "e2",
+      type: "BRING_IN",
+      seat: 0,
+      street: "3rd",
+      amount: 20,
+      timestamp: Date.now(),
+    });
+    expect(intermediateState.pendingResponseCount).toBe(1);
+
+    const foldEvent: Event = {
+      id: "e3",
+      type: "FOLD",
+      seat: 1,
+      street: "3rd",
+      timestamp: Date.now(),
+    };
+    const finalState = applyEvent(intermediateState, foldEvent);
+    expect(finalState.pendingResponseCount).toBe(0);
+  });
+
+  it("FOLDイベントでpendingResponseCountが変わらないこと（checkフェーズ）", () => {
+    // checkフェーズ（currentBet = 0）での状態
+    const checkPhaseState = {
+      ...initialState,
+      street: "4th" as const,
+      currentBet: 0,
+      pendingResponseCount: 0,
+    };
+
+    const foldEvent: Event = {
+      id: "e3",
+      type: "FOLD",
+      seat: 0,
+      street: "4th",
+      timestamp: Date.now(),
+    };
+    const finalState = applyEvent(checkPhaseState, foldEvent);
+    expect(finalState.players[0].active).toBe(false);
+    expect(finalState.pendingResponseCount).toBe(0); // 変化なし
   });
 
   it("CHECKイベントが正しく処理されること", () => {
