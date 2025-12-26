@@ -423,7 +423,23 @@ describe("pickFirstActorFromUpcards", () => {
         expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
       });
 
-      it("同カテゴリ（ペア）は ペアランク → キッカー降順 で比較される", () => {
+      it("同カテゴリ（ペア）は ペアランク → キッカー降順 で比較される (ペア勝負)", () => {
+        const gameType: GameType = "studHi";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        // 両方ペアだが、ペアランクで比較
+        // seat0: 8 8 Q
+        // seat1: A A 3
+        // ペア：A > 8 なので seat1
+        const hands = makeUpCards({
+          0: ["8", "8", "Q"],
+          1: ["A", "A", "3"],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
+      }); 
+
+      it("同カテゴリ（ペア）は ペアランク → キッカー降順 で比較される (キッカー勝負)", () => {
         const gameType: GameType = "stud8";
         const activeSeats: SeatIndex[] = [0, 1];
 
@@ -453,6 +469,19 @@ describe("pickFirstActorFromUpcards", () => {
         expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(3);
       });
 
+      it("ペア > ハイカード", () => {
+        const gameType: GameType = "studHi";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        const hands = makeUpCards({
+          0: ["A", "K", "Q", "J"], // high
+          1: ["9", "9", "2", "3"], // pair
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
+      });
+
+
       it("同カテゴリ（ハイカード）は大きいランクが高い方が強い（辞書式）", () => {
         const gameType: GameType = "stud8";
         const activeSeats: SeatIndex[] = [0, 1];
@@ -468,7 +497,23 @@ describe("pickFirstActorFromUpcards", () => {
         expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
       });
 
-      it("同カテゴリ（ペア）は ペアランク → キッカー降順 で比較される", () => {
+      it("同カテゴリ（ペア）は ペアランク → キッカー降順 で比較される (ペア勝負)", () => {
+        const gameType: GameType = "studHi";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        // 両方ペアだが、ペアランクで比較
+        // seat0: A A 3 2
+        // seat1: 8 8 Q J
+        // ペア：A > 8 なので seat0
+        const hands = makeUpCards({
+          0: ["A", "A", "3", "2"],
+          1: ["8", "8", "Q", "J"],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
+      });
+
+      it("同カテゴリ（ペア）は ペアランク → キッカー降順 で比較される (キッカー勝負)", () => {
         const gameType: GameType = "studHi";
         const activeSeats: SeatIndex[] = [0, 1];
 
