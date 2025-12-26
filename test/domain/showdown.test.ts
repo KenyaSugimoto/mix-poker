@@ -240,11 +240,11 @@ describe("evaluateStud8", () => {
       { suit: "d", rank: "Q" },
     ];
     const result = evaluateStud8(cards);
-    
+
     // High: Straight
     expect(result.high.rank).toBe("STRAIGHT");
     expect(result.high.kickers[0]).toBe(5); // 5-high straight
-    
+
     // Low: 5-4-3-2-A
     expect(result.low).not.toBeNull();
     expect(result.low?.ranks).toEqual([1, 2, 3, 4, 5]);
