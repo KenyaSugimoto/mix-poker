@@ -24,7 +24,10 @@ export interface ShowdownResult {
 /**
  * ランクを数値に変換（A=1, K=13, Q=12, J=11, T=10, 9=9, ..., 2=2）
  */
-const rankToNumber = (rank: Card["rank"]): number => {
+/**
+ * ランクを数値に変換（Stud8 Low / Razz 用 - A=1, K=13）
+ */
+const rankToNumberLow = (rank: Card["rank"]): number => {
   const map: Record<Card["rank"], number> = {
     A: 1,
     K: 13,
@@ -44,12 +47,37 @@ const rankToNumber = (rank: Card["rank"]): number => {
 };
 
 /**
+ * ランクを数値に変換（Stud Hi / Stud8 Hi 用 - A=14, K=13）
+ */
+const rankToNumberHigh = (rank: Card["rank"]): number => {
+  const map: Record<Card["rank"], number> = {
+    A: 14,
+    K: 13,
+    Q: 12,
+    J: 11,
+    T: 10,
+    "9": 9,
+    "8": 8,
+    "7": 7,
+    "6": 6,
+    "5": 5,
+    "4": 4,
+    "3": 3,
+    "2": 2,
+  };
+  return map[rank];
+};
+
+/**
  * カード配列をランクでグループ化
  */
-export const groupByRank = (cards: Card[]): Map<number, Card[]> => {
+export const groupByRank = (
+  cards: Card[],
+  rankConverter = rankToNumberLow,
+): Map<number, Card[]> => {
   const groups = new Map<number, Card[]>();
   for (const card of cards) {
-    const rank = rankToNumber(card.rank);
+    const rank = rankConverter(card.rank);
     const existing = groups.get(rank) || [];
     groups.set(rank, [...existing, card]);
   }
@@ -127,7 +155,7 @@ export const evaluateStudHi = (cards: Card[]): HighHandResult => {
     return { rank: "HIGH_CARD", kickers: [] };
   }
 
-  const rankGroups = groupByRank(cards);
+  const rankGroups = groupByRank(cards, rankToNumberHigh);
   const suitGroups = groupBySuit(cards);
 
   // ランクの出現回数でソート（多い順）
@@ -151,7 +179,7 @@ export const evaluateStudHi = (cards: Card[]): HighHandResult => {
   if (flushSuit) {
     const flushCards = suitGroups.get(flushSuit);
     if (flushCards) {
-      const flushRanks = flushCards.map((c) => rankToNumber(c.rank));
+      const flushRanks = flushCards.map((c) => rankToNumberLow(c.rank));
       const straightResult = isStraight(flushRanks);
       if (straightResult.isStraight && straightResult.highestRank !== null) {
         return {
@@ -163,7 +191,7 @@ export const evaluateStudHi = (cards: Card[]): HighHandResult => {
   }
 
   // ストレート判定（全カードのランクから）
-  const allRanks = cards.map((c) => rankToNumber(c.rank));
+  const allRanks = cards.map((c) => rankToNumberLow(c.rank));
   const straightResult = isStraight(allRanks);
 
   // フォーカード判定
@@ -189,7 +217,7 @@ export const evaluateStudHi = (cards: Card[]): HighHandResult => {
     const flushCards = suitGroups.get(flushSuit);
     if (flushCards) {
       const flushRanks = flushCards
-        .map((c) => rankToNumber(c.rank))
+        .map((c) => rankToNumberHigh(c.rank))
         .sort((a, b) => b - a)
         .slice(0, 5);
       return {

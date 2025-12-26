@@ -37,7 +37,7 @@ describe("evaluateStudHi", () => {
     ];
     const result = evaluateStudHi(cards);
     expect(result.rank).toBe("FOUR_OF_A_KIND");
-    expect(result.kickers[0]).toBe(1); // A
+    expect(result.kickers[0]).toBe(14); // A
   });
 
   it("フルハウスを正しく判定できること", () => {
@@ -52,7 +52,7 @@ describe("evaluateStudHi", () => {
     ];
     const result = evaluateStudHi(cards);
     expect(result.rank).toBe("FULL_HOUSE");
-    expect(result.kickers[0]).toBe(1); // A
+    expect(result.kickers[0]).toBe(14); // A
     expect(result.kickers[1]).toBe(13); // K
   });
 
@@ -228,6 +228,27 @@ describe("evaluateStud8", () => {
     expect(result.high.rank).toBeDefined();
     expect(result.low).toBeNull();
   });
+
+  it("Scoop (High & Low Win) を正しく判定できること", () => {
+    const cards: Card[] = [
+      { suit: "s", rank: "A" },
+      { suit: "c", rank: "2" },
+      { suit: "d", rank: "3" },
+      { suit: "h", rank: "4" },
+      { suit: "s", rank: "5" }, // A-2-3-4-5 Straight (High) & Low
+      { suit: "c", rank: "K" },
+      { suit: "d", rank: "Q" },
+    ];
+    const result = evaluateStud8(cards);
+    
+    // High: Straight
+    expect(result.high.rank).toBe("STRAIGHT");
+    expect(result.high.kickers[0]).toBe(5); // 5-high straight
+    
+    // Low: 5-4-3-2-A
+    expect(result.low).not.toBeNull();
+    expect(result.low?.ranks).toEqual([1, 2, 3, 4, 5]);
+  });
 });
 
 describe("resolveShowdown", () => {
@@ -307,6 +328,92 @@ describe("resolveShowdown", () => {
     expect(result.winnersHigh[0]).toBe(0); // フルハウスが勝つ
   });
 
+  it("ブロードウェイストレート（A-K-Q-J-T）が最強として判定されること", () => {
+    const hands: Record<number, Card[]> = {
+      0: [
+        { suit: "s", rank: "A" },
+        { suit: "c", rank: "K" },
+        { suit: "d", rank: "Q" },
+        { suit: "h", rank: "J" },
+        { suit: "s", rank: "T" },
+        { suit: "c", rank: "9" }, // dummy
+        { suit: "d", rank: "2" }, // dummy
+      ],
+      1: [
+        // K high straight
+        { suit: "s", rank: "K" },
+        { suit: "c", rank: "Q" },
+        { suit: "d", rank: "J" },
+        { suit: "h", rank: "T" },
+        { suit: "s", rank: "9" },
+        { suit: "c", rank: "8" },
+        { suit: "d", rank: "2" },
+      ],
+    };
+    const deal = createDealState("studHi");
+    const result = resolveShowdown(deal, hands);
+    expect(result.winnersHigh).toHaveLength(1);
+    expect(result.winnersHigh[0]).toBe(0); // BroadWay Straight wins
+  });
+
+  it("同じランクのペア同士でキッカー勝負が正しく判定されること", () => {
+    const hands: Record<number, Card[]> = {
+      0: [
+        // Aペア + Qキッカー
+        { suit: "s", rank: "A" },
+        { suit: "c", rank: "A" },
+        { suit: "d", rank: "Q" },
+        { suit: "h", rank: "T" },
+        { suit: "s", rank: "8" },
+        { suit: "c", rank: "2" },
+        { suit: "d", rank: "3" },
+      ],
+      1: [
+        // Aペア + Jキッカー
+        { suit: "s", rank: "A" }, // same pair rank
+        { suit: "h", rank: "A" },
+        { suit: "d", rank: "J" }, // weaker kicker
+        { suit: "h", rank: "T" },
+        { suit: "s", rank: "8" },
+        { suit: "c", rank: "2" },
+        { suit: "d", rank: "3" },
+      ],
+    };
+    const deal = createDealState("studHi");
+    const result = resolveShowdown(deal, hands);
+    expect(result.winnersHigh).toHaveLength(1);
+    expect(result.winnersHigh[0]).toBe(0); // Q kicker wins
+  });
+
+  it("Ace HighがKing Highに勝つこと", () => {
+    const hands: Record<number, Card[]> = {
+      0: [
+        // A High
+        { suit: "s", rank: "A" },
+        { suit: "c", rank: "Q" },
+        { suit: "d", rank: "J" },
+        { suit: "h", rank: "9" },
+        { suit: "s", rank: "7" },
+        { suit: "c", rank: "5" },
+        { suit: "d", rank: "3" },
+      ],
+      1: [
+        // K High
+        { suit: "s", rank: "K" },
+        { suit: "c", rank: "Q" },
+        { suit: "d", rank: "J" },
+        { suit: "h", rank: "9" },
+        { suit: "s", rank: "7" },
+        { suit: "c", rank: "5" },
+        { suit: "d", rank: "3" },
+      ],
+    };
+    const deal = createDealState("studHi");
+    const result = resolveShowdown(deal, hands);
+    expect(result.winnersHigh).toHaveLength(1);
+    expect(result.winnersHigh[0]).toBe(0); // Ace High wins
+  });
+
   it("Stud Hiでチョップを正しく判定できること", () => {
     const sameHand: Card[] = [
       { suit: "s", rank: "A" },
@@ -324,6 +431,35 @@ describe("resolveShowdown", () => {
     const deal = createDealState("studHi");
     const result = resolveShowdown(deal, hands);
     expect(result.winnersHigh).toHaveLength(2); // チョップ
+  });
+
+  it("Stud HiでAのワンペアが8のワンペアに勝つこと（Issue #42）", () => {
+    const hands: Record<number, Card[]> = {
+      0: [
+        // Aのワンペア
+        { suit: "s", rank: "A" },
+        { suit: "c", rank: "A" },
+        { suit: "d", rank: "K" },
+        { suit: "h", rank: "Q" },
+        { suit: "s", rank: "J" },
+        { suit: "c", rank: "9" },
+        { suit: "d", rank: "7" },
+      ],
+      1: [
+        // 8のワンペア
+        { suit: "s", rank: "8" },
+        { suit: "c", rank: "8" },
+        { suit: "d", rank: "K" },
+        { suit: "h", rank: "Q" },
+        { suit: "s", rank: "J" },
+        { suit: "c", rank: "9" },
+        { suit: "d", rank: "7" },
+      ],
+    };
+    const deal = createDealState("studHi");
+    const result = resolveShowdown(deal, hands);
+    expect(result.winnersHigh).toHaveLength(1);
+    expect(result.winnersHigh[0]).toBe(0); // seat 0 (Aのペア) が勝者
   });
 
   it("全員foldの場合（1人だけ残っている）", () => {
