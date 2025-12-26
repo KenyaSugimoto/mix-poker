@@ -195,14 +195,7 @@ const handleStreetAdvance = (
     p.committedThisStreet = 0;
   }
 
-  // 最初のアクターを決定（3rdはブリングイン、4th以降はアップカード構成に基づく）
-  if (nextStreet) {
-    draft.currentActorIndex = pickFirstActorFromUpcards(
-      draft.gameType,
-      draft.players.filter((p) => p.active).map((p) => p.seat),
-      draft.hands,
-    );
-  }
+  // 最初のアクターはカード配布後に決定されるので、ここでは設定しない
 };
 
 const handleDealInit = (draft: Draft<DealState>, event: DealInitEvent) => {
@@ -244,6 +237,13 @@ const handleDealCardUp = (draft: Draft<DealState>, _event: DealCardEvent) => {
   const result = dealCardUp(draft.deck, activeSeats, draft.hands);
   draft.deck = result.deck;
   draft.hands = result.hands;
+
+  // カード配布後に先頭アクターを再計算
+  draft.currentActorIndex = pickFirstActorFromUpcards(
+    draft.gameType,
+    activeSeats,
+    draft.hands,
+  );
 };
 
 const handleDealCard7th = (draft: Draft<DealState>, _event: DealCardEvent) => {

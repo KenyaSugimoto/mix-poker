@@ -437,7 +437,7 @@ describe("pickFirstActorFromUpcards", () => {
         });
 
         expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
-      }); 
+      });
 
       it("同カテゴリ（ペア）は ペアランク → キッカー降順 で比較される (キッカー勝負)", () => {
         const gameType: GameType = "stud8";
@@ -480,7 +480,6 @@ describe("pickFirstActorFromUpcards", () => {
 
         expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
       });
-
 
       it("同カテゴリ（ハイカード）は大きいランクが高い方が強い（辞書式）", () => {
         const gameType: GameType = "stud8";
