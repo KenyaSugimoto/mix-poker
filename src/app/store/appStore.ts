@@ -21,9 +21,9 @@ import { generateId } from "../../domain/utils/id";
 import type { AppState, FullStore, UiState } from "../types";
 import {
   loadAppState,
-  saveAppState,
   STORAGE_KEY,
   STORAGE_VERSION,
+  saveAppState,
 } from "./persistence";
 
 const MAX_FULL_RECENT = 10;
