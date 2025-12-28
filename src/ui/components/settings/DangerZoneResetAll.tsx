@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { useAppStore } from "../../../app/store/appStore";
+import { UI_STRINGS } from "../../constants/uiStrings";
 
 export const DangerZoneResetAll: React.FC = () => {
   const resetAll = useAppStore((state) => state.resetAll);
@@ -8,7 +9,7 @@ export const DangerZoneResetAll: React.FC = () => {
   const [confirmText, setConfirmText] = useState("");
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const CONFIRM_TEXT = "DELETE ALL";
+  const CONFIRM_TEXT = UI_STRINGS.DANGER_ZONE.CONFIRM_TEXT;
 
   const handleReset = () => {
     if (confirmText === CONFIRM_TEXT) {
@@ -27,9 +28,11 @@ export const DangerZoneResetAll: React.FC = () => {
   return (
     <div className="bg-destructive/10 border border-destructive p-4 rounded">
       <div className="mb-4">
-        <h3 className="font-semibold text-destructive mb-2">全データ削除</h3>
+        <h3 className="font-semibold text-destructive mb-2">
+          {UI_STRINGS.DANGER_ZONE.TITLE}
+        </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          すべてのゲームデータ、履歴、お気に入りを削除します。この操作は取り消せません。
+          {UI_STRINGS.DANGER_ZONE.DESCRIPTION}
         </p>
       </div>
 
@@ -39,7 +42,7 @@ export const DangerZoneResetAll: React.FC = () => {
           onClick={() => setShowConfirm(true)}
           className="px-4 py-2 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90"
         >
-          全データを削除
+          {UI_STRINGS.DANGER_ZONE.BUTTON_DELETE}
         </button>
       ) : (
         <div className="space-y-3">
@@ -48,7 +51,8 @@ export const DangerZoneResetAll: React.FC = () => {
               htmlFor="confirm-input"
               className="block text-sm font-medium mb-2"
             >
-              確認のため、以下を入力してください: <code>{CONFIRM_TEXT}</code>
+              {UI_STRINGS.DANGER_ZONE.CONFIRM_PROMPT}{" "}
+              <code>{CONFIRM_TEXT}</code>
             </label>
             <input
               id="confirm-input"
@@ -66,14 +70,14 @@ export const DangerZoneResetAll: React.FC = () => {
               disabled={confirmText !== CONFIRM_TEXT}
               className="px-4 py-2 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              削除を実行
+              {UI_STRINGS.DANGER_ZONE.BUTTON_EXECUTE}
             </button>
             <button
               type="button"
               onClick={handleCancel}
               className="px-4 py-2 bg-muted text-muted-foreground rounded hover:bg-muted/80"
             >
-              キャンセル
+              {UI_STRINGS.DANGER_ZONE.BUTTON_CANCEL}
             </button>
           </div>
         </div>

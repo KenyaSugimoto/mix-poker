@@ -1,3 +1,5 @@
+import { UI_STRINGS } from "../constants/uiStrings";
+
 /**
  * アクションタイプから日本語ラベルに変換
  */
@@ -5,19 +7,19 @@ export const getActionLabel = (actionType: string | null): string => {
   if (!actionType) return "";
   switch (actionType) {
     case "BRING_IN":
-      return "Bring In";
+      return UI_STRINGS.ACTIONS.BRING_IN;
     case "COMPLETE":
-      return "Complete";
+      return UI_STRINGS.ACTIONS.COMPLETE;
     case "BET":
-      return "Bet";
+      return UI_STRINGS.ACTIONS.BET;
     case "RAISE":
-      return "Raise";
+      return UI_STRINGS.ACTIONS.RAISE;
     case "CALL":
-      return "Call";
+      return UI_STRINGS.ACTIONS.CALL;
     case "CHECK":
-      return "Check";
+      return UI_STRINGS.ACTIONS.CHECK;
     case "FOLD":
-      return "Fold";
+      return UI_STRINGS.ACTIONS.FOLD;
     default:
       return "";
   }

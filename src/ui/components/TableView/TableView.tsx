@@ -5,6 +5,7 @@ import {
   evaluateStudHi,
 } from "../../../domain/showdown/resolveShowdown";
 import type { DealState, DealSummary, GameState } from "../../../domain/types";
+import { UI_STRINGS } from "../../constants/uiStrings";
 import { getHandRankLabel, getLowHandLabel } from "../../utils/handRankLabel";
 import { getGameTypeLabel } from "../../utils/labelHelper";
 import { DealInfo } from "../play/DealInfo";
@@ -47,7 +48,7 @@ export const TableView: React.FC<TableViewProps> = ({
             handRankLabels[seatIdx] = getHandRankLabel(result.high.rank);
             lowRankLabels[seatIdx] = result.low
               ? getLowHandLabel(result.low)
-              : "ローなし";
+              : UI_STRINGS.COMMON.NO_LOW;
           } else {
             // StudHiはHighのみ
             const result = evaluateStudHi(cards);
@@ -128,7 +129,8 @@ export const TableView: React.FC<TableViewProps> = ({
         // DealStateのplayersはseat順に並んでいるが、GameStateのplayersはID順
         // ここでは簡易的にindexで対応（本来はIDでマッチングすべき）
         const gamePlayer = game.players[index];
-        const playerName = gamePlayer?.name ?? `Player ${index + 1}`;
+        const playerName =
+          gamePlayer?.name ?? UI_STRINGS.COMMON.PLAYER_DEFAULT(index + 1);
         const isCurrentActor = deal.currentActorIndex === index;
         const isWinner = winnerSeats.has(index);
 
