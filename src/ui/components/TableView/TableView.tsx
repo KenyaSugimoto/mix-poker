@@ -112,8 +112,14 @@ export const TableView: React.FC<TableViewProps> = ({
       {/* ゲーム種目表示カード */}
       <div className="absolute top-[56%] left-[44%] -translate-x-1/2 -translate-y-1/2 z-10">
         <div className="bg-amber-400/95 backdrop-blur-sm rounded-sm px-2 py-0.5 shadow-[0_4px_10px_rgba(0,0,0,0.5)] border border-amber-600/60">
-          <span className="text-[10px] font-black text-amber-950 tracking-tight">
-            {getGameTypeLabel(deal.gameType)}
+          <span className="text-[10px] text-amber-950 tracking-tight">
+            <span className="font-black">
+              {getGameTypeLabel(deal.gameType)}
+            </span>
+            <span className="font-bold ml-0.5">
+              (#{(dealIndex % game.rotation.dealPerGame) + 1}/
+              {game.rotation.dealPerGame})
+            </span>
           </span>
         </div>
       </div>
