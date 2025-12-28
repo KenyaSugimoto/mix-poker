@@ -1,4 +1,5 @@
 import type React from "react";
+import { useEffect, useState } from "react";
 import type { DealState, PlayerState } from "../../../domain/types";
 import { getActionLabel, getLastAction } from "../../utils/actionLabel";
 import { ActiveIndicator } from "./ActiveIndicator";
@@ -18,6 +19,31 @@ interface SeatPanelProps {
   handRankLabel?: string | null; // High役の日本語ラベル
   lowRankLabel?: string | null; // Low役のラベル
 }
+
+/**
+ * アクションが消えても一定時間表示を維持するフック
+ */
+const useStickyAction = (
+  action: string | null,
+  delay = 2000,
+): string | null => {
+  const [stickyAction, setStickyAction] = useState<string | null>(action);
+
+  useEffect(() => {
+    // 新しいアクションが来たら即更新
+    if (action) {
+      setStickyAction(action);
+    } else {
+      // アクションが消えた場合（ストリート変更など）、遅延させて消す
+      const timer = setTimeout(() => {
+        setStickyAction(null);
+      }, delay);
+      return () => clearTimeout(timer);
+    }
+  }, [action, delay]);
+
+  return stickyAction;
+};
 
 export const SeatPanel: React.FC<SeatPanelProps> = ({
   player,
@@ -57,6 +83,8 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
 
   // そのストリートにおける直近アクションを取得
   const lastAction = getLastAction(deal.actionsThisStreet, seatIndex);
+  // アクション表示を維持する
+  const displayedAction = useStickyAction(lastAction);
 
   return (
     <div
@@ -121,10 +149,10 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
           <div className="pt-2 border-t space-y-1">
             <div className="flex justify-between text-xs">
               <span className="font-semibold">{player.stack}</span>
-              {lastAction && (
+              {displayedAction && (
                 <div className="flex justify-between text-xs">
                   <span className="font-semibold text-primary">
-                    {getActionLabel(lastAction)}
+                    {getActionLabel(displayedAction)}
                   </span>
                 </div>
               )}
