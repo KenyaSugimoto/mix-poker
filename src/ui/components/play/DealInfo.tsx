@@ -1,42 +1,40 @@
 import type React from "react";
 import type { DealState } from "../../../domain/types";
-import { getGameTypeLabel } from "../../utils/labelHelper";
 
 interface DealInfoProps {
   deal: DealState;
   dealIndex: number;
 }
 
-export const DealInfo: React.FC<DealInfoProps> = ({ deal, dealIndex }) => {
+export const DealInfo: React.FC<DealInfoProps> = ({ deal }) => {
   return (
-    <div className="bg-card rounded-xl p-3 shadow-sm border">
-      <div className="flex items-center gap-6">
-        <div className="flex items-center gap-4">
-          <div>
-            <h3 className="text-sm font-semibold">
-              {getGameTypeLabel(deal.gameType)}
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              Deal #{dealIndex + 1} • {deal.street} Street
-            </p>
+    <div className="bg-black/60 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-white/20 min-w-[200px]">
+      <div className="flex flex-col gap-1.5">
+        {/* ステークス情報 */}
+        <div className="flex items-center justify-between gap-3 text-[10px]">
+          <div className="flex flex-col">
+            <span className="text-white/40 leading-tight">Ante</span>
+            <span className="font-bold text-white leading-tight">
+              {deal.ante}
+            </span>
           </div>
-        </div>
-        <div className="flex items-center gap-4 border-l pl-4 text-xs">
-          <div>
-            <div className="text-muted-foreground">Ante</div>
-            <div className="font-semibold">{deal.ante}</div>
+          <div className="flex flex-col">
+            <span className="text-white/40 leading-tight">Bring In</span>
+            <span className="font-bold text-white leading-tight">
+              {deal.bringIn}
+            </span>
           </div>
-          <div>
-            <div className="text-muted-foreground">Bring In</div>
-            <div className="font-semibold">{deal.bringIn}</div>
+          <div className="flex flex-col">
+            <span className="text-white/40 leading-tight">Small Bet (comp)</span>
+            <span className="font-bold text-white leading-tight">
+              {deal.smallBet}
+            </span>
           </div>
-          <div>
-            <div className="text-muted-foreground">Complete(Small)</div>
-            <div className="font-semibold">{deal.smallBet}</div>
-          </div>
-          <div>
-            <div className="text-muted-foreground">Big</div>
-            <div className="font-semibold">{deal.bigBet}</div>
+          <div className="flex flex-col">
+            <span className="text-white/40 leading-tight">Big Bet</span>
+            <span className="font-bold text-white leading-tight">
+              {deal.bigBet}
+            </span>
           </div>
         </div>
       </div>

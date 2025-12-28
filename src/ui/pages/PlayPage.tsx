@@ -2,7 +2,6 @@ import type React from "react";
 import { useAppStore } from "../../app/store/appStore";
 import type { GameState } from "../../domain/types";
 import { ActionPanel } from "../components/play/ActionPanel";
-import { DealInfo } from "../components/play/DealInfo";
 import { HamburgerMenu } from "../components/play/HamburgerMenu";
 import { TableView } from "../components/TableView/TableView";
 
@@ -85,17 +84,19 @@ export const PlayPage: React.FC = () => {
           onSettingsClick={() => setScreen("SETTINGS")}
         />
       </div>
-      {/* 2行レイアウト: 1行目TableView、2行目GameHeader+ActionPanel */}
+      {/* 2行レイアウト: 1行目TableView、2行目ActionPanel */}
       <div className="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
         {/* 1行目: TableView */}
         <div className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
-          <TableView deal={displayDeal} game={game} dealSummary={dealSummary} />
+          <TableView
+            deal={displayDeal}
+            game={game}
+            dealSummary={dealSummary}
+            dealIndex={game.dealIndex}
+          />
         </div>
-        {/* 2行目: DealInfo + ActionPanel/StartDealButton（横並び） */}
+        {/* 2行目: ActionPanel/StartDealButton */}
         <div className="flex-shrink-0 flex gap-3">
-          <div className="flex-shrink-0">
-            <DealInfo deal={displayDeal} dealIndex={game.dealIndex} />
-          </div>
           <div className="flex-shrink-0">
             {isDealFinished ? (
               // TODO: 将来的にはボタンで手動実行ではなく、数秒後に自動的に新しいディールが開始されるようにする

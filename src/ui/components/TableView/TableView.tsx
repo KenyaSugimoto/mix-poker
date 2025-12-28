@@ -6,6 +6,8 @@ import {
 } from "../../../domain/showdown/resolveShowdown";
 import type { DealState, DealSummary, GameState } from "../../../domain/types";
 import { getHandRankLabel, getLowHandLabel } from "../../utils/handRankLabel";
+import { getGameTypeLabel } from "../../utils/labelHelper";
+import { DealInfo } from "../play/DealInfo";
 import { ActionHistoryPanel } from "./ActionHistoryPanel";
 import { PotStackBadge } from "./PotStackBadge";
 import { SeatPanel } from "./SeatPanel";
@@ -14,12 +16,14 @@ interface TableViewProps {
   deal: DealState;
   game: GameState;
   dealSummary: DealSummary | null; // 終了したディールの場合の結果情報
+  dealIndex: number; // ディール番号（DealInfo表示用）
 }
 
 export const TableView: React.FC<TableViewProps> = ({
   deal,
   game,
   dealSummary,
+  dealIndex,
 }) => {
   // 役の計算（dealFinished時のみ）
   const handRankLabels: Record<number, string | null> = {};
@@ -83,11 +87,16 @@ export const TableView: React.FC<TableViewProps> = ({
     <div
       className={`relative w-full h-full ${getTableSize(deal.playerCount)} bg-gradient-to-br from-green-900 to-green-800 rounded-2xl shadow-xl border-4 border-green-700 overflow-hidden p-8`}
     >
-      {/* アクション履歴パネル */}
+      {/* DealInfo（左上） */}
+      <div className="absolute top-4 left-4 z-20">
+        <DealInfo deal={deal} dealIndex={dealIndex} />
+      </div>
+      {/* アクション履歴パネル（右上） */}
       <ActionHistoryPanel
         eventLog={deal.eventLog}
         seatOrder={deal.seatOrder}
         players={game.players}
+        dealIndex={dealIndex}
       />
       {/* テーブル中央のポット表示 */}
       <div className="absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
@@ -97,6 +106,15 @@ export const TableView: React.FC<TableViewProps> = ({
           <div className="text-sm font-bold tabular-nums text-white">
             {deal.pot}
           </div>
+        </div>
+      </div>
+
+      {/* ゲーム種目表示カード */}
+      <div className="absolute top-[56%] left-[44%] -translate-x-1/2 -translate-y-1/2 z-10">
+        <div className="bg-amber-400/95 backdrop-blur-sm rounded-sm px-2 py-0.5 shadow-[0_4px_10px_rgba(0,0,0,0.5)] border border-amber-600/60">
+          <span className="text-[10px] font-black text-amber-950 tracking-tight">
+            {getGameTypeLabel(deal.gameType)}
+          </span>
         </div>
       </div>
       {/* 各プレイヤーのSeatPanel */}

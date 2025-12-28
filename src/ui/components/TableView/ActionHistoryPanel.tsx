@@ -11,6 +11,7 @@ interface ActionHistoryPanelProps {
   eventLog: Event[];
   seatOrder: PlayerId[];
   players: GamePlayer[];
+  dealIndex: number;
 }
 
 // ストリートの日本語ラベル
@@ -30,6 +31,7 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
   eventLog,
   seatOrder,
   players,
+  dealIndex,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -88,9 +90,11 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
   }
 
   return (
-    <div className="absolute top-4 left-4 z-20 w-56 max-h-52 rounded-lg border border-white/20 bg-black/60 backdrop-blur-sm shadow-lg">
+    <div className="absolute top-4 right-4 z-20 w-56 max-h-52 rounded-lg border border-white/20 bg-black/60 backdrop-blur-sm shadow-lg">
       <div className="px-3 py-2 border-b border-white/10">
-        <h3 className="text-xs font-semibold text-white/80">アクション履歴</h3>
+        <h3 className="text-xs font-semibold text-white/80">
+          アクション履歴 (#{dealIndex + 1})
+        </h3>
       </div>
       <div
         ref={scrollRef}
