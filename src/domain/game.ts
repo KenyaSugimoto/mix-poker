@@ -119,6 +119,7 @@ export const startNewDeal = (
     rngSeed: params.rngSeed,
     hands: {}, // DEAL_INITイベントで初期化
     startedAt,
+    eventLog: [], // イベントログを初期化
   };
 
   return {

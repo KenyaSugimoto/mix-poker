@@ -33,6 +33,12 @@ import type {
  */
 export const applyEvent = (state: DealState, event: Event): DealState => {
   return produce(state, (draft) => {
+    // イベントログに追加（eventLogがない場合は初期化）
+    if (!draft.eventLog) {
+      draft.eventLog = [];
+    }
+    draft.eventLog.push(event);
+
     switch (event.type) {
       case "POST_ANTE":
         handlePostAnte(draft, event);

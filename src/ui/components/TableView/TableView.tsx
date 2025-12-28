@@ -6,6 +6,7 @@ import {
 } from "../../../domain/showdown/resolveShowdown";
 import type { DealState, DealSummary, GameState } from "../../../domain/types";
 import { getHandRankLabel, getLowHandLabel } from "../../utils/handRankLabel";
+import { ActionHistoryPanel } from "./ActionHistoryPanel";
 import { PotStackBadge } from "./PotStackBadge";
 import { SeatPanel } from "./SeatPanel";
 
@@ -82,6 +83,12 @@ export const TableView: React.FC<TableViewProps> = ({
     <div
       className={`relative w-full h-full ${getTableSize(deal.playerCount)} bg-gradient-to-br from-green-900 to-green-800 rounded-2xl shadow-xl border-4 border-green-700 overflow-hidden p-8`}
     >
+      {/* アクション履歴パネル */}
+      <ActionHistoryPanel
+        eventLog={deal.eventLog}
+        seatOrder={deal.seatOrder}
+        players={game.players}
+      />
       {/* テーブル中央のポット表示 */}
       <div className="absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
         <PotStackBadge pot={deal.pot} ante={deal.ante} />

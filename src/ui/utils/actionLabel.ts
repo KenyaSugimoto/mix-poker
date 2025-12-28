@@ -40,3 +40,16 @@ export const getLastAction = (
   if (playerActions.length === 0) return null;
   return playerActions[playerActions.length - 1];
 };
+
+/**
+ * プレイヤーアクションのみをフィルタリングするためのタイプ一覧
+ */
+export const PLAYER_ACTION_TYPES = [
+  "BET",
+  "RAISE",
+  "CALL",
+  "FOLD",
+  "CHECK",
+  "BRING_IN",
+  "COMPLETE",
+] as const;

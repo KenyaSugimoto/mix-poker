@@ -85,6 +85,7 @@ export interface DealState {
   rngSeed: string;
   hands: Record<SeatIndex, PlayerHand>;
   startedAt?: number; // ディール開始時刻（DealSummary生成用）
+  eventLog: Event[]; // Deal全体を通したイベントログ
 }
 
 // Event関連
