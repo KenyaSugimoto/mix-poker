@@ -25,7 +25,9 @@ export const DealInfo: React.FC<DealInfoProps> = ({ deal }) => {
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-white/40 leading-tight">Small Bet (comp)</span>
+            <span className="text-white/40 leading-tight">
+              Small Bet (comp)
+            </span>
             <span className="font-bold text-white leading-tight">
               {deal.smallBet}
             </span>
