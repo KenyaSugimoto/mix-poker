@@ -100,7 +100,7 @@ const rankToNumberForLowHand = (rank: Card["rank"]): number => {
 };
 
 /**
- * スートを数値に変換（♣=0, ♦=1, ♥=2, ♠=3）
+ * スートを数値に変換（3rd Street bring-in用：♣=0, ♦=1, ♥=2, ♠=3）
  */
 const suitToNumber = (suit: Card["suit"]): number => {
   const map: Record<Card["suit"], number> = {
@@ -111,6 +111,18 @@ const suitToNumber = (suit: Card["suit"]): number => {
   };
   return map[suit];
 };
+
+/**
+ * Hi用スート変換：♠=3 > ♥=2 > ♦=1 > ♣=0
+ */
+const suitToNumberHi = (suit: Card["suit"]): number =>
+  ({ s: 3, h: 2, d: 1, c: 0 })[suit];
+
+/**
+ * Low用スート変換（逆順）：♣=3 > ♦=2 > ♥=1 > ♠=0
+ */
+const suitToNumberLow = (suit: Card["suit"]): number =>
+  ({ c: 3, d: 2, h: 1, s: 0 })[suit];
 
 /**
  * 3rd Streetのbring-in対象者を決定する
@@ -203,68 +215,83 @@ const compareLex = (a: number[], b: number[]): number => {
 };
 
 const buildUpcardsScoreHi = (upCards: Card[]): number[] => {
-  const vals = upCards.map((c) => rankToNumberForHighHand(c.rank));
-  // count by rank value
-  const counts = new Map<number, number>();
-  for (const v of vals) counts.set(v, (counts.get(v) ?? 0) + 1);
+  // 各カードを (rank * 4 + suit) で表現し、ランクが同じならスートで差がつく
+  const cardScore = (c: Card) =>
+    rankToNumberForHighHand(c.rank) * 4 + suitToNumberHi(c.suit);
+  const vals = upCards.map(cardScore);
+  const rankVals = upCards.map((c) => rankToNumberForHighHand(c.rank));
 
-  // groups: [{rank, count}]
-  const groups = Array.from(counts.entries()).map(([rank, count]) => ({
-    rank,
-    count,
-  }));
+  // count by rank value (カテゴリ判定用)
+  const counts = new Map<number, number>();
+  for (const rv of rankVals) counts.set(rv, (counts.get(rv) ?? 0) + 1);
+
+  // groups: [{rank, count, maxSuitScore}]
+  const groups = Array.from(counts.entries()).map(([rank, count]) => {
+    // そのランクのカードの中で最大のスート値を取得
+    const cardsOfRank = upCards.filter(
+      (c) => rankToNumberForHighHand(c.rank) === rank,
+    );
+    const maxSuitScore = Math.max(
+      ...cardsOfRank.map((c) => suitToNumberHi(c.suit)),
+    );
+    return { rank, count, maxSuitScore };
+  });
   // sort by (count desc, rank desc) for Hi
   groups.sort((a, b) => b.count - a.count || b.rank - a.rank);
 
   // detect category
   const top = groups[0];
   if (top.count === 4) {
-    // [3, quadRank]
-    return [3, top.rank];
+    // [3, quadRank * 4 + maxSuit]
+    return [3, top.rank * 4 + top.maxSuitScore];
   }
   if (top.count === 3) {
     const kickers = groups
       .filter((g) => g.count === 1)
-      .map((g) => g.rank)
+      .map((g) => g.rank * 4 + g.maxSuitScore)
       .sort((a, b) => b - a);
-    return [2, top.rank, ...kickers];
+    return [2, top.rank * 4 + top.maxSuitScore, ...kickers];
   }
   if (top.count === 2) {
-    // このスコープでは「2ペア」は出ない（upCards最大4枚なので可能だが、あなたの定義に無い）
-    // ただし安全に扱う：2ペアが出たら「ペア」カテゴリ内で強く扱う（ペアランク高い順→次ペア→キッカー）
+    // 2ペアが出たら「ペア」カテゴリ内で強く扱う（ペアランク高い順->次ペア->キッカー）
     const pairs = groups
       .filter((g) => g.count === 2)
-      .map((g) => g.rank)
+      .map((g) => g.rank * 4 + g.maxSuitScore)
       .sort((a, b) => b - a);
     const kickers = groups
       .filter((g) => g.count === 1)
-      .map((g) => g.rank)
+      .map((g) => g.rank * 4 + g.maxSuitScore)
       .sort((a, b) => b - a);
 
-    // pairs.length === 1 → 通常のワンペア
-    // pairs.length === 2 → ツーペア（拡張）
     return [1, ...pairs, ...kickers];
   }
 
-  // high card
+  // high card: ソート済みcard scoreを返す
   const sorted = vals.slice().sort((a, b) => b - a);
   return [0, ...sorted];
 };
 
 const buildUpcardsScoreRazz = (upCards: Card[]): number[] => {
-  const vals = upCards.map((c) => rankToNumberForLowHand(c.rank));
+  const rankVals = upCards.map((c) => rankToNumberForLowHand(c.rank));
   const counts = new Map<number, number>();
-  for (const v of vals) counts.set(v, (counts.get(v) ?? 0) + 1);
+  for (const rv of rankVals) counts.set(rv, (counts.get(rv) ?? 0) + 1);
 
-  const groups = Array.from(counts.entries()).map(([rank, count]) => ({
-    rank,
-    count,
-  }));
+  const groups = Array.from(counts.entries()).map(([rank, count]) => {
+    // そのランクのカードの中で最大のスート値を取得（Low用）
+    const cardsOfRank = upCards.filter(
+      (c) => rankToNumberForLowHand(c.rank) === rank,
+    );
+    const maxSuitScore = Math.max(
+      ...cardsOfRank.map((c) => suitToNumberLow(c.suit)),
+    );
+    return { rank, count, maxSuitScore };
+  });
 
   // Razzの「役カテゴリ」は HIGH(最強) > PAIR > TRIPS > QUADS(最弱)
-  // 同役なら「大きいカードが小さい方が強い」＝ ranks降順で見たとき、先頭が小さいほど強い
-  // → 反転値 inv = 15 - rank を使って“大きいほど強い”へ寄せる
-  const inv = (r: number) => 15 - r;
+  // 同役なら「大きいカードが小さい方が強い」
+  // スート込みで反転: invWithSuit = (15 - rank) * 4 + suitScore
+  const invWithSuit = (rank: number, suitScore: number) =>
+    (15 - rank) * 4 + suitScore;
 
   // まずカテゴリ判定に必要な情報を作る
   const maxCount = Math.max(...groups.map((g) => g.count));
@@ -274,37 +301,41 @@ const buildUpcardsScoreRazz = (upCards: Card[]): number[] => {
     if (!quadGroup) {
       throw new Error("Expected quad group not found");
     }
-    const quadRank = quadGroup.rank;
-    return [0, inv(quadRank)];
+    return [0, invWithSuit(quadGroup.rank, quadGroup.maxSuitScore)];
   }
   if (maxCount === 3) {
     const tripGroup = groups.find((g) => g.count === 3);
     if (!tripGroup) {
       throw new Error("Expected trip group not found");
     }
-    const tripRank = tripGroup.rank;
     const kickers = groups
       .filter((g) => g.count === 1)
-      .map((g) => inv(g.rank))
+      .map((g) => invWithSuit(g.rank, g.maxSuitScore))
       .sort((a, b) => b - a);
-    return [1, inv(tripRank), ...kickers];
+    return [1, invWithSuit(tripGroup.rank, tripGroup.maxSuitScore), ...kickers];
   }
   if (maxCount === 2) {
     const pairs = groups
       .filter((g) => g.count === 2)
-      .map((g) => inv(g.rank))
+      .map((g) => invWithSuit(g.rank, g.maxSuitScore))
       .sort((a, b) => b - a);
     const kickers = groups
       .filter((g) => g.count === 1)
-      .map((g) => inv(g.rank))
+      .map((g) => invWithSuit(g.rank, g.maxSuitScore))
       .sort((a, b) => b - a);
     return [2, ...pairs, ...kickers];
   }
 
-  // high card：大きいカードが小さいほど強い → ranks降順の比較を inv で反転
-  const sortedDesc = vals.slice().sort((a, b) => b - a); // “大きいカード”から見る
-  const invSorted = sortedDesc.map(inv); // 小さいほど強いを大きいほど強いへ
-  return [3, ...invSorted];
+  // high card：まずランクで降順ソート（大きいカードから見る）、その後スート込みスコアへ
+  const sortedByRankDesc = upCards
+    .slice()
+    .sort(
+      (a, b) => rankToNumberForLowHand(b.rank) - rankToNumberForLowHand(a.rank),
+    );
+  const cardScores = sortedByRankDesc.map((c) =>
+    invWithSuit(rankToNumberForLowHand(c.rank), suitToNumberLow(c.suit)),
+  );
+  return [3, ...cardScores];
 };
 
 // 4th+ 先頭アクター（seat配列から選ぶ）

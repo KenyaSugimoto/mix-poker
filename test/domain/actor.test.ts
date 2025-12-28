@@ -62,6 +62,7 @@ describe("getNextActor", () => {
     deck: [],
     rngSeed: "",
     hands: {},
+    eventLog: [],
   };
 
   it("pendingResponseCount > 0 の場合、次のアクティブなプレイヤーインデックスを返すこと", () => {
@@ -209,6 +210,7 @@ describe("computeBringInIndex", () => {
     deck: [],
     rngSeed: "",
     hands: {},
+    eventLog: [],
   };
 
   it("Stud Hiで最弱のアップカード（rank最小）を持つプレイヤーがbring-inになること", () => {
@@ -364,6 +366,21 @@ const makeUpCards = (
   return out;
 };
 
+// スートを明示的に指定するヘルパー
+const handWithSuits = (cards: [Card["rank"], Card["suit"]][]): PlayerHand => ({
+  downCards: [],
+  upCards: cards.map(([rank, suit]) => ({ rank, suit })),
+});
+
+const makeUpCardsWithSuits = (
+  spec: Record<number, [Card["rank"], Card["suit"]][]>,
+): Record<number, PlayerHand> => {
+  const out: Record<number, PlayerHand> = {};
+  for (const [k, cards] of Object.entries(spec))
+    out[Number(k)] = handWithSuits(cards);
+  return out;
+};
+
 describe("pickFirstActorFromUpcards", () => {
   describe("Stud Hi / Stud8（upcards強い人が先頭）", () => {
     describe("4th Street", () => {
@@ -372,8 +389,8 @@ describe("pickFirstActorFromUpcards", () => {
         const activeSeats: SeatIndex[] = [0, 1];
 
         const hands = makeUpCards({
-          0: ["A", "K", "Q"], // high
-          1: ["9", "9", "2"], // pair
+          0: ["A", "K"], // high
+          1: ["9", "9"], // pair
         });
 
         expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
@@ -644,6 +661,127 @@ describe("pickFirstActorFromUpcards", () => {
       });
 
       expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
+    });
+  });
+
+  describe("スートによるタイブレーク", () => {
+    describe("Stud Hi / Stud8（Hi用スート: s > h > d > c）", () => {
+      it("同ランクの場合、スートが強い方が先頭（7d3s vs 7c3d）", () => {
+        const gameType: GameType = "studHi";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        // seat0: 7d 3s → スート: d=1, s=3
+        // seat1: 7c 3d → スート: c=0, d=1
+        // 7同士: d(1) > c(0) → seat0が強い
+        const hands = makeUpCardsWithSuits({
+          0: [
+            ["7", "d"],
+            ["3", "s"],
+          ],
+          1: [
+            ["7", "c"],
+            ["3", "d"],
+          ],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
+      });
+
+      it("4枚全て同ランクでもスートで差がつく（A s h d c の順）", () => {
+        const gameType: GameType = "stud8";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        // seat0: Ac Kc Qc Jc（全てクラブ）
+        // seat1: As Ks Qs Js（全てスペード）
+        // 先頭A: s(3) > c(0) → seat1が強い
+        const hands = makeUpCardsWithSuits({
+          0: [
+            ["A", "c"],
+            ["K", "c"],
+            ["Q", "c"],
+            ["J", "c"],
+          ],
+          1: [
+            ["A", "s"],
+            ["K", "s"],
+            ["Q", "s"],
+            ["J", "s"],
+          ],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
+      });
+
+      it("ペア同士で同ランクの場合、ペアのスートで差がつく", () => {
+        const gameType: GameType = "studHi";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        // seat0: 9c 9d 2h（ペア9、最大スートd）
+        // seat1: 9h 9s 2c（ペア9、最大スートs）
+        // ペアランク同じ → スート s(3) > d(1) → seat1が強い
+        const hands = makeUpCardsWithSuits({
+          0: [
+            ["9", "c"],
+            ["9", "d"],
+            ["2", "h"],
+          ],
+          1: [
+            ["9", "h"],
+            ["9", "s"],
+            ["2", "c"],
+          ],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
+      });
+    });
+
+    describe("Razz（Low用スート: c > d > h > s）", () => {
+      it("同ランクの場合、Low用スートが強い方が先頭（A5c vs A5s）", () => {
+        const gameType: GameType = "razz";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        // seat0: Ac 5c（Low用スート: c=3）
+        // seat1: As 5s（Low用スート: s=0）
+        // A同士: c(3) > s(0) → seat0が強い
+        const hands = makeUpCardsWithSuits({
+          0: [
+            ["A", "c"],
+            ["5", "c"],
+          ],
+          1: [
+            ["A", "s"],
+            ["5", "s"],
+          ],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(0);
+      });
+
+      it("Razzではスート順序が逆転する（sが最弱）", () => {
+        const gameType: GameType = "razz";
+        const activeSeats: SeatIndex[] = [0, 1];
+
+        // seat0: 2s 3s 4s 5s（全てスペード、Low用では最弱）
+        // seat1: 2c 3c 4c 5c（全てクラブ、Low用では最強）
+        // → seat1が強い
+        const hands = makeUpCardsWithSuits({
+          0: [
+            ["2", "s"],
+            ["3", "s"],
+            ["4", "s"],
+            ["5", "s"],
+          ],
+          1: [
+            ["2", "c"],
+            ["3", "c"],
+            ["4", "c"],
+            ["5", "c"],
+          ],
+        });
+
+        expect(pickFirstActorFromUpcards(gameType, activeSeats, hands)).toBe(1);
+      });
     });
   });
 });
