@@ -112,7 +112,7 @@ test/                 # テストファイル
 本プロジェクトでは、AIエージェント（Cursor, Antigravity/Gemini Code Assistなど）が適切なコーディング規約やドメイン知識に基づいて開発を行えるよう、プロジェクト独自のルールを定義しています。
 
 - **Cursor**: `.cursor/rules/` 配下に各カテゴリ別のルールファイル（`.mdc`）が格納されています。
-- **Antigravity**: `.agent/rules/use_cursor_rules.md` が設定されており、Cursorと同じルールを参照するよう構成されています。
+- **Antigravity**: `.agent/rules/general_rule.md` が設定されており、Cursorと同じルールを参照するよう構成されています。
 
 AIエージェントを利用して開発を行う際は、最初に `.cursor/rules/general.mdc` を読み込ませることで、プロジェクト全体の指針を共有できます。
 
