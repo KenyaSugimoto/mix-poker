@@ -97,7 +97,7 @@ export const PlayPage: React.FC = () => {
             deal={displayDeal}
             game={game}
             dealSummary={dealSummary}
-            dealIndex={game.dealIndex}
+            dealIndex={isDealFinished ? game.dealIndex - 1 : game.dealIndex}
           />
         </div>
         {/* 2行目: ActionPanel/StartDealButton */}
