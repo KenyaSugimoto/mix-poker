@@ -1,5 +1,6 @@
 import type React from "react";
 import type { DealState } from "../../../domain/types";
+import { UI_STRINGS } from "../../constants/uiStrings";
 
 interface DealInfoProps {
   deal: DealState;
@@ -13,27 +14,33 @@ export const DealInfo: React.FC<DealInfoProps> = ({ deal }) => {
         {/* ステークス情報 */}
         <div className="flex items-center justify-between gap-3 text-[10px]">
           <div className="flex flex-col">
-            <span className="text-white/40 leading-tight">Ante</span>
+            <span className="text-white/40 leading-tight">
+              {UI_STRINGS.STAKES.ANTE}
+            </span>
             <span className="font-bold text-white leading-tight">
               {deal.ante}
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-white/40 leading-tight">Bring In</span>
+            <span className="text-white/40 leading-tight">
+              {UI_STRINGS.STAKES.BRING_IN}
+            </span>
             <span className="font-bold text-white leading-tight">
               {deal.bringIn}
             </span>
           </div>
           <div className="flex flex-col">
             <span className="text-white/40 leading-tight">
-              Small Bet (comp)
+              {UI_STRINGS.STAKES.SMALL_BET}
             </span>
             <span className="font-bold text-white leading-tight">
               {deal.smallBet}
             </span>
           </div>
           <div className="flex flex-col">
-            <span className="text-white/40 leading-tight">Big Bet</span>
+            <span className="text-white/40 leading-tight">
+              {UI_STRINGS.STAKES.BIG_BET}
+            </span>
             <span className="font-bold text-white leading-tight">
               {deal.bigBet}
             </span>

@@ -5,6 +5,7 @@ import type {
   PlayerId,
   Street,
 } from "../../../domain/types";
+import { UI_STRINGS } from "../../constants/uiStrings";
 import { getActionLabel, PLAYER_ACTION_TYPES } from "../../utils/actionLabel";
 
 interface ActionHistoryPanelProps {
@@ -15,13 +16,7 @@ interface ActionHistoryPanelProps {
 }
 
 // ストリートの日本語ラベル
-const STREET_LABELS: Record<Street, string> = {
-  "3rd": "3rd",
-  "4th": "4th",
-  "5th": "5th",
-  "6th": "6th",
-  "7th": "7th",
-};
+const STREET_LABELS: Record<Street, string> = UI_STRINGS.STREETS;
 
 /**
  * プレイヤーのアクション履歴を表示するパネル
@@ -72,9 +67,9 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
   // seatIndexからプレイヤー名を取得
   const getPlayerName = (seatIndex: number): string => {
     const playerId = seatOrder[seatIndex];
-    if (!playerId) return `Seat ${seatIndex + 1}`;
+    if (!playerId) return UI_STRINGS.COMMON.SEAT_DEFAULT(seatIndex + 1);
     const player = players.find((p) => p.id === playerId);
-    return player?.name ?? `Player ${seatIndex + 1}`;
+    return player?.name ?? UI_STRINGS.COMMON.PLAYER_DEFAULT(seatIndex + 1);
   };
 
   // アクションから金額を取得（存在する場合）
@@ -93,7 +88,7 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
     <div className="absolute top-4 right-4 z-20 w-56 max-h-52 rounded-lg border border-white/20 bg-black/60 backdrop-blur-sm shadow-lg">
       <div className="px-3 py-2 border-b border-white/10">
         <h3 className="text-xs font-semibold text-white/80">
-          アクション履歴 (#{dealIndex + 1})
+          {UI_STRINGS.PLAY.ACTION_HISTORY_TITLE(dealIndex + 1)}
         </h3>
       </div>
       <div

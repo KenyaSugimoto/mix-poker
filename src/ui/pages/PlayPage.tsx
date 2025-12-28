@@ -4,6 +4,7 @@ import type { GameState } from "../../domain/types";
 import { ActionPanel } from "../components/play/ActionPanel";
 import { HamburgerMenu } from "../components/play/HamburgerMenu";
 import { TableView } from "../components/TableView/TableView";
+import { UI_STRINGS } from "../constants/uiStrings";
 
 const StartDealButton: React.FC<{ game: GameState }> = ({ game }) => {
   const startDeal = useAppStore((state) => state.startDeal);
@@ -18,7 +19,7 @@ const StartDealButton: React.FC<{ game: GameState }> = ({ game }) => {
       }}
       className="px-3 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 text-sm whitespace-nowrap"
     >
-      Start New Deal
+      {UI_STRINGS.PLAY.START_NEW_DEAL}
     </button>
   );
 };
@@ -32,13 +33,15 @@ export const PlayPage: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto p-4">
         <div className="bg-card rounded-xl p-8 text-center shadow-sm border">
-          <p className="text-muted-foreground mb-4">No game in progress</p>
+          <p className="text-muted-foreground mb-4">
+            {UI_STRINGS.PLAY.NO_GAME}
+          </p>
           <button
             type="button"
             onClick={() => setScreen("SETUP")}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90"
           >
-            Go to Setup
+            {UI_STRINGS.PLAY.GO_TO_SETUP}
           </button>
         </div>
       </div>
@@ -60,7 +63,9 @@ export const PlayPage: React.FC = () => {
       <div className="h-full w-full flex flex-col p-6 space-y-6 overflow-hidden">
         <div className="flex-1 min-h-0 flex items-center justify-center">
           <div className="bg-card rounded-xl p-8 text-center shadow-sm border">
-            <p className="text-muted-foreground mb-4">No deal available</p>
+            <p className="text-muted-foreground mb-4">
+              {UI_STRINGS.PLAY.NO_DEAL}
+            </p>
             <StartDealButton game={game} />
           </div>
         </div>

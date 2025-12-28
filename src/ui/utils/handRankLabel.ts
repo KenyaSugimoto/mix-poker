@@ -1,19 +1,10 @@
 import type { HandRank, LowHandScore } from "../../domain/types";
+import { UI_STRINGS } from "../constants/uiStrings";
 
 /**
  * HandRankを日本語ラベルに変換する
  */
-const HAND_RANK_LABELS: Record<HandRank, string> = {
-  HIGH_CARD: "ハイカード",
-  ONE_PAIR: "ワンペア",
-  TWO_PAIR: "ツーペア",
-  THREE_OF_A_KIND: "スリーカード",
-  STRAIGHT: "ストレート",
-  FLUSH: "フラッシュ",
-  FULL_HOUSE: "フルハウス",
-  FOUR_OF_A_KIND: "フォーカード",
-  STRAIGHT_FLUSH: "ストレートフラッシュ",
-};
+const HAND_RANK_LABELS: Record<HandRank, string> = UI_STRINGS.HAND_RANKS;
 
 export const getHandRankLabel = (rank: HandRank): string =>
   HAND_RANK_LABELS[rank];
