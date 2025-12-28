@@ -257,6 +257,11 @@ const storeCreator = (set: any, get: any): AppStore => ({
             if (!state.game || !state.game.currentDeal) return;
 
             const finishedDeal = state.game.currentDeal;
+
+            // [FIX] 明示的にdealFinishedフラグを立てる
+            // これにより、フロントエンド（SeatPanel等）がハンド公開や役表示を行えるようになる
+            finishedDeal.dealFinished = true;
+
             // finishDealでGameStateを更新
             state.game = finishDeal(state.game, finishedDeal);
 
