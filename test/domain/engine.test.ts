@@ -44,6 +44,7 @@ describe("applyEvent", () => {
     deck: [],
     rngSeed: "",
     hands: {},
+    eventLog: [],
   };
 
   it("POST_ANTEイベントが正しく処理されること", () => {
@@ -493,14 +494,14 @@ describe("applyEvent", () => {
       expect(nextState.currentActorIndex).toBe(1);
     });
 
-    it("DEAL_CARD_7TH後は先頭アクターが変わらないこと（ダウンカード配布のため）", () => {
-      // 6thまでの状態: seat0が先頭アクター
+    it("DEAL_CARD_7TH後もupcardに基づいて先頭アクターが決定されること", () => {
+      // 6thまでの状態: seat0がペア（先頭）、seat1がハイカード
       const state6th: DealState = {
         ...initialState,
         street: "6th",
-        currentActorIndex: 0, // seat0が先頭アクター
+        currentActorIndex: 1, // 6thでseat1が先だったと仮定
         deck: [
-          // ダウンカードなので何が配られても先頭アクターは変わらない
+          // ダウンカードなので何が配られても先頭アクターの決定には影響しない
           { rank: "A", suit: "c" } as Card,
           { rank: "K", suit: "c" } as Card,
         ],
@@ -542,8 +543,130 @@ describe("applyEvent", () => {
 
       const nextState = applyEvent(state6th, event);
 
-      // 7thはダウンカードなので先頭アクターは変わらない
+      // 7thはダウンカードだがfirst actorはupcardに基づいて判定される
+      // seat0: 9のペア vs seat1: ハイカード -> seat0が先頭アクター
       expect(nextState.currentActorIndex).toBe(0);
+    });
+
+    it("Razz: DEAL_CARD_7TH後もupcardに基づいて先頭アクターが決定されること", () => {
+      // 6thまでの状態: seat0が良いロー（ハイカード）、seat1が悪いロー（ペア）
+      const state6thRazz: DealState = {
+        ...initialState,
+        gameType: "razz",
+        street: "6th",
+        currentActorIndex: 1, // 6thでseat1が先だったと仮定
+        deck: [
+          { rank: "K", suit: "c" } as Card,
+          { rank: "Q", suit: "c" } as Card,
+        ],
+        hands: {
+          0: {
+            downCards: [
+              { rank: "T", suit: "c" } as Card,
+              { rank: "J", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "A", suit: "s" } as Card,
+              { rank: "2", suit: "h" } as Card,
+              { rank: "3", suit: "d" } as Card,
+              { rank: "4", suit: "c" } as Card, // ハイカード - 良いロー
+            ],
+          },
+          1: {
+            downCards: [
+              { rank: "K", suit: "h" } as Card,
+              { rank: "Q", suit: "h" } as Card,
+            ],
+            upCards: [
+              { rank: "7", suit: "s" } as Card,
+              { rank: "7", suit: "h" } as Card, // ペア - 悪いロー
+              { rank: "8", suit: "d" } as Card,
+              { rank: "9", suit: "c" } as Card,
+            ],
+          },
+        },
+      };
+
+      const event: Event = {
+        id: generateId(),
+        type: "DEAL_CARD_7TH",
+        seat: null,
+        street: "7th",
+        timestamp: Date.now(),
+      };
+
+      const nextState = applyEvent(state6thRazz, event);
+
+      // Razzでは良いロー（ハイカード）がfirst actor
+      // seat0: A 2 3 4 (ハイカード) vs seat1: 7 7 8 9 (ペア)
+      // seat0が先頭アクターになる
+      expect(nextState.currentActorIndex).toBe(0);
+    });
+
+    it("6thと7thで同じfirst actorになること（upcardが変わらないため）", () => {
+      // 5thまでの状態
+      const state5th: DealState = {
+        ...initialState,
+        street: "5th",
+        deck: [
+          // 6th用カード
+          { rank: "9", suit: "c" } as Card,
+          { rank: "J", suit: "d" } as Card,
+          // 7th用カード（ダウン）
+          { rank: "2", suit: "d" } as Card,
+          { rank: "3", suit: "d" } as Card,
+        ],
+        hands: {
+          0: {
+            downCards: [
+              { rank: "2", suit: "c" } as Card,
+              { rank: "3", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "K", suit: "s" } as Card,
+              { rank: "K", suit: "h" } as Card, // ペア
+              { rank: "Q", suit: "d" } as Card,
+            ],
+          },
+          1: {
+            downCards: [
+              { rank: "4", suit: "c" } as Card,
+              { rank: "5", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "A", suit: "s" } as Card,
+              { rank: "T", suit: "h" } as Card,
+              { rank: "8", suit: "d" } as Card, // ハイカード
+            ],
+          },
+        },
+      };
+
+      // 6thカードを配布
+      const state6th = applyEvent(state5th, {
+        id: generateId(),
+        type: "DEAL_CARD_6TH",
+        seat: null,
+        street: "6th",
+        timestamp: Date.now(),
+      });
+
+      // 6thでの先頭アクターを記録
+      const firstActor6th = state6th.currentActorIndex;
+      // seat0: K K Q 9 (ペア) がfirst actorになるはず
+      expect(firstActor6th).toBe(0);
+
+      // 7thカードを配布
+      const state7th = applyEvent(state6th, {
+        id: generateId(),
+        type: "DEAL_CARD_7TH",
+        seat: null,
+        street: "7th",
+        timestamp: Date.now(),
+      });
+
+      // 7thでも同じ先頭アクター（upcardは変わらない）
+      expect(state7th.currentActorIndex).toBe(firstActor6th);
     });
 
     it("Razzでは弱いアップカード（ハイカード）を持つプレイヤーが先頭アクターになること", () => {

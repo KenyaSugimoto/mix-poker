@@ -261,6 +261,13 @@ const handleDealCard7th = (draft: Draft<DealState>, _event: DealCardEvent) => {
   const result = dealCard7th(draft.deck, activeSeats, draft.hands);
   draft.deck = result.deck;
   draft.hands = result.hands;
+
+  // 7thはダウンカードだがfirst actorはupcardに基づいて判定する（6thと同じロジック）
+  draft.currentActorIndex = pickFirstActorFromUpcards(
+    draft.gameType,
+    activeSeats,
+    draft.hands,
+  );
 };
 
 const getNextStreet = (
