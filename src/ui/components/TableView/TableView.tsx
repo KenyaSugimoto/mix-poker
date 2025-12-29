@@ -26,11 +26,15 @@ export const TableView: React.FC<TableViewProps> = ({
   dealSummary,
   dealIndex,
 }) => {
-  // 役の計算（dealFinished時のみ）
+  // 役の計算（ショーダウン時のみ：dealFinished かつ アクティブプレイヤーが2人以上）
   const handRankLabels: Record<number, string | null> = {};
   const lowRankLabels: Record<number, string | null> = {};
 
-  if (deal.dealFinished) {
+  // ショーダウン判定：アクティブプレイヤーが2人以上残っている場合のみ役を計算
+  const activePlayerCount = deal.players.filter((p) => p.active).length;
+  const isShowdown = deal.dealFinished && activePlayerCount >= 2;
+
+  if (isShowdown) {
     for (const seat of Object.keys(deal.hands)) {
       const seatIdx = Number(seat);
       const player = deal.players.find((p) => p.seat === seatIdx);
