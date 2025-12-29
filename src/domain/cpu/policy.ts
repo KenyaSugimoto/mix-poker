@@ -1,4 +1,5 @@
 import type { DealState, EventType, SeatIndex } from "../types";
+import { decideLv1 } from "./decideLv1";
 
 /**
  * CPUが選択可能なアクションタイプ（STREET_ADVANCE/DEAL_ENDは含まない）
@@ -40,5 +41,15 @@ export const cpuLv0: CpuStrategy = {
 
     // フォールバック（通常は到達しない）
     return "FOLD";
+  },
+};
+
+/**
+ * Lv1 CPU戦略
+ * ハンドスコアと状況に基づいて意思決定を行う
+ */
+export const cpuLv1: CpuStrategy = {
+  decide(ctx) {
+    return decideLv1(ctx);
   },
 };

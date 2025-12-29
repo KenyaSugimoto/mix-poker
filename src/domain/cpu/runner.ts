@@ -2,7 +2,7 @@ import { applyEvent } from "../engine/applyEvent";
 import { getAllowedActions } from "../rules/allowedActions";
 import type { DealState, Event } from "../types";
 import { createEventFromAction } from "./eventFactory";
-import { type ActionType, cpuLv0 } from "./policy";
+import { type ActionType, cpuLv1 } from "./policy";
 
 /**
  * CPUターンを実行する（1アクション分）
@@ -37,7 +37,7 @@ export const runCpuTurn = (
   }
 
   // CPU戦略でアクションを決定
-  const action = cpuLv0.decide({
+  const action = cpuLv1.decide({
     state,
     seat,
     allowedActions: cpuAllowedActions,
