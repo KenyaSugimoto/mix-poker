@@ -2,15 +2,22 @@ import { applyEvent } from "../engine/applyEvent";
 import { getAllowedActions } from "../rules/allowedActions";
 import type { DealState, Event } from "../types";
 import { createEventFromAction } from "./eventFactory";
-import { type ActionType, cpuLv0 } from "./policy";
+import { type ActionType, cpuLv0, cpuLv1 } from "./policy";
+
+/** CPU戦略レベル */
+export type CpuLevel = "lv0" | "lv1";
 
 /**
  * CPUターンを実行する（1アクション分）
+ * @param state 現在のDealState
+ * @param seat CPUのシートインデックス
+ * @param cpuLevel CPU戦略レベル（デフォルト: lv1）
  * @returns 適用されたイベント、またはnull（終了条件）
  */
 export const runCpuTurn = (
   state: DealState,
   seat: number,
+  cpuLevel: CpuLevel = "lv1",
 ): { nextState: DealState; event: Event } | null => {
   // 終了チェック
   if (state.dealFinished) return null;
@@ -36,8 +43,11 @@ export const runCpuTurn = (
     return null;
   }
 
+  // CPU戦略を選択
+  const strategy = cpuLevel === "lv0" ? cpuLv0 : cpuLv1;
+
   // CPU戦略でアクションを決定
-  const action = cpuLv0.decide({
+  const action = strategy.decide({
     state,
     seat,
     allowedActions: cpuAllowedActions,

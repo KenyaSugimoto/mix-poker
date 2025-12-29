@@ -18,7 +18,7 @@ import type {
   PostAnteEvent,
 } from "../../domain/types";
 import { generateId } from "../../domain/utils/id";
-import type { AppState, FullStore, UiState } from "../types";
+import type { AppState, CpuLevel, FullStore, UiState } from "../types";
 import {
   loadAppState,
   STORAGE_KEY,
@@ -57,6 +57,7 @@ export interface AppActions {
   setSelectedDealId: (dealId: string | null) => void;
   toggleFavoriteDeal: (dealId: string) => void;
   setDisplayUnit: (unit: "points" | "bb") => void;
+  setCpuLevel: (level: CpuLevel) => void;
 }
 
 export type AppStore = AppState & AppActions;
@@ -65,6 +66,7 @@ const INITIAL_UI: UiState = {
   screen: "SETUP",
   selectedDealId: null,
   displayUnit: "points",
+  cpuLevel: "lv1",
 };
 
 const INITIAL_FULL_STORE: FullStore = {
@@ -325,7 +327,12 @@ const storeCreator = (set: any, get: any): AppStore => ({
       if (!actor || actor.kind !== "cpu") return;
 
       // CPUターンを実行
-      const result = runCpuTurn(currentDeal, currentDeal.currentActorIndex);
+      const cpuLevel = currentState.ui.cpuLevel;
+      const result = runCpuTurn(
+        currentDeal,
+        currentDeal.currentActorIndex,
+        cpuLevel,
+      );
       if (!result) return;
 
       // イベントを適用
@@ -507,6 +514,15 @@ const storeCreator = (set: any, get: any): AppStore => ({
       produce((state: AppState) => {
         state.ui.displayUnit = unit;
         // 表示単位の変更は保存する（任意）
+        saveAppState(get());
+      }),
+    );
+  },
+
+  setCpuLevel: (level) => {
+    set(
+      produce((state: AppState) => {
+        state.ui.cpuLevel = level;
         saveAppState(get());
       }),
     );
