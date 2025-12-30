@@ -21,12 +21,12 @@ export interface CpuParamsLv1 {
  * デフォルトパラメータ（堅実寄り）
  */
 export const DEFAULT_PARAMS_LV1: CpuParamsLv1 = {
-  tightness: 0.75,
-  aggression: 0.35,
-  bluffFreq: 0.01,
-  semiBluffFreq: 0.03,
-  multiwayPenalty: 0.2,
-  bigBetFear: 0.3,
+  tightness: 0.2, // 0.75 -> 0.2: Requires less score to act
+  aggression: 0.6, // 0.35 -> 0.6: More likely to raise
+  bluffFreq: 0.05, // 0.01 -> 0.05: Slightly more random bluffs
+  semiBluffFreq: 0.15, // 0.03 -> 0.15: More semi-bluffs
+  multiwayPenalty: 0.1, // 0.2 -> 0.1: Less scared of multiway
+  bigBetFear: 0.2, // 0.3 -> 0.2: Less scared of big bets
 };
 
 /**
@@ -52,14 +52,14 @@ export const STREET_THRESHOLDS: Record<
   StreetThresholds
 > = {
   "3rd": {
-    completeThreshold: 70,
+    completeThreshold: 60, // 70 -> 60: One Pair likely competes
     betThreshold: 0,
     raiseThreshold: 0,
     foldThreshold: 40,
   },
   "4th": {
     completeThreshold: 0,
-    betThreshold: 62,
+    betThreshold: 58, // 62 -> 58: Weak pair can bet
     raiseThreshold: 75,
     foldThreshold: 42,
   },
