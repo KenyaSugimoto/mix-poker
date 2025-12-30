@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { decideLv1 } from "../../../src/domain/cpu/decideLv1";
+import { DEFAULT_PARAMS_LV1 } from "../../../src/domain/cpu/params";
 import type { CpuDecisionContext } from "../../../src/domain/cpu/policy";
 import type { Card, DealState } from "../../../src/domain/types";
 
@@ -455,6 +456,64 @@ describe("decideLv1", () => {
 
       // 弱い手 + rng=1 -> CHECK
       expect(action).toBe("CHECK");
+    });
+  });
+  describe("raiseChanceAdjust パラメータテスト", () => {
+    it("raiseChanceAdjust=0.0 の場合、強い手でもRAISEしないこと", () => {
+      const state = createTestState({
+        street: "4th",
+        currentBet: 40,
+        hands: {
+          0: { downCards: [], upCards: [] },
+          1: {
+            downCards: [{ rank: "A", suit: "h" } as Card, { rank: "A", suit: "c" } as Card],
+            upCards: [{ rank: "K", suit: "s" } as Card, { rank: "K", suit: "h" } as Card],
+          },
+        },
+      });
+
+      const ctx: CpuDecisionContext = {
+        state,
+        seat: 1,
+        allowedActions: ["CALL", "RAISE", "FOLD"],
+      };
+
+      // aggression=1.0 でも adjust=0.0 なら adjusted=0.0 -> RAISEしない
+      const params = { ...DEFAULT_PARAMS_LV1, aggression: 1.0, raiseChanceAdjust: 0.0 };
+      
+      // rng=0 (本来なら絶対RAISEする乱数値)
+      const action = decideLv1(ctx, () => 0, params);
+
+      expect(action).not.toBe("RAISE");
+      expect(action).toBe("CALL");
+    });
+
+    it("raiseChanceAdjust=1.0 の場合、条件を満たせばRAISEすること", () => {
+      const state = createTestState({
+        street: "4th",
+        currentBet: 40,
+        hands: {
+          0: { downCards: [], upCards: [] },
+          1: {
+            downCards: [{ rank: "A", suit: "h" } as Card, { rank: "A", suit: "c" } as Card, { rank: "A", suit: "d" } as Card],
+            upCards: [{ rank: "A", suit: "s" } as Card, { rank: "K", suit: "h" } as Card],
+          },
+        },
+      });
+
+      const ctx: CpuDecisionContext = {
+        state,
+        seat: 1,
+        allowedActions: ["CALL", "RAISE", "FOLD"],
+      };
+
+      // aggression=0.5, adjust=1.0 -> adjusted=0.5. tightness=0 (閾値上昇を防ぐ)
+      const params = { ...DEFAULT_PARAMS_LV1, aggression: 0.5, raiseChanceAdjust: 1.0, tightness: 0 };
+
+      // rng=0 (< 0.5) -> RAISE
+      const action = decideLv1(ctx, () => 0, params);
+
+      expect(action).toBe("RAISE");
     });
   });
 });
