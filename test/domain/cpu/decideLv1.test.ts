@@ -495,7 +495,7 @@ describe("decideLv1", () => {
         hands: {
           0: { downCards: [], upCards: [] },
           1: {
-            downCards: [{ rank: "A", suit: "h" } as Card, { rank: "A", suit: "c" } as Card, { rank: "A", suit: "d" } as Card],
+            downCards: [{ rank: "A", suit: "h" } as Card, { rank: "A", suit: "c" } as Card],
             upCards: [{ rank: "A", suit: "s" } as Card, { rank: "K", suit: "h" } as Card],
           },
         },
