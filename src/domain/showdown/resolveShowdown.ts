@@ -150,10 +150,7 @@ const isStraight = (
  * 7枚から最良の5枚を選んでHighHandResultを返す
  */
 export const evaluateStudHi = (cards: Card[]): HighHandResult => {
-  if (cards.length < 5) {
-    // 5枚未満の場合はエラー扱い（通常は発生しない）
-    return { rank: "HIGH_CARD", kickers: [] };
-  }
+  // if (cards.length < 5) return { rank: "HIGH_CARD", kickers: [] };
 
   const rankGroups = groupByRank(cards, rankToNumberHigh);
   const suitGroups = groupBySuit(cards);

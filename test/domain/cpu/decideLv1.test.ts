@@ -456,5 +456,46 @@ describe("decideLv1", () => {
       // 弱い手 + rng=1 -> CHECK
       expect(action).toBe("CHECK");
     });
+    it("相手に高ランクカードが見えていても、ワンペアがあれば積極的にBETすること（チューニング後）", () => {
+      // Me: Pair of 5s (Score 64)
+      // Opponent: Upcards A, K (Penalty 4) -> Net 60
+      // Threshold: 58 (was 62)
+      const state = createTestState({
+        street: "4th",
+        currentBet: 0,
+        hands: {
+          0: {
+            downCards: [
+              { rank: "A", suit: "s" } as Card,
+              { rank: "K", suit: "d" } as Card,
+            ],
+            upCards: [
+              { rank: "A", suit: "h" } as Card, // High
+              { rank: "K", suit: "c" } as Card, // High -> highCards >= 2 -> Penalty 4
+            ],
+          },
+          1: {
+            downCards: [
+              { rank: "5", suit: "c" } as Card,
+              { rank: "5", suit: "h" } as Card, // Pair -> Score 64
+            ],
+            upCards: [
+              { rank: "2", suit: "d" } as Card,
+              { rank: "3", suit: "s" } as Card,
+            ],
+          },
+        },
+      });
+
+      const ctx: CpuDecisionContext = {
+        state,
+        seat: 1,
+        allowedActions: ["CHECK", "BET"],
+      };
+
+      const action = decideLv1(ctx, () => 0.5);
+
+      expect(action).toBe("BET");
+    });
   });
 });
