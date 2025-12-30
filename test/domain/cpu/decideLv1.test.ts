@@ -466,8 +466,14 @@ describe("decideLv1", () => {
         hands: {
           0: { downCards: [], upCards: [] },
           1: {
-            downCards: [{ rank: "A", suit: "h" } as Card, { rank: "A", suit: "c" } as Card],
-            upCards: [{ rank: "K", suit: "s" } as Card, { rank: "K", suit: "h" } as Card],
+            downCards: [
+              { rank: "A", suit: "h" } as Card,
+              { rank: "A", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "K", suit: "s" } as Card,
+              { rank: "K", suit: "h" } as Card,
+            ],
           },
         },
       });
@@ -479,8 +485,12 @@ describe("decideLv1", () => {
       };
 
       // aggression=1.0 でも adjust=0.0 なら adjusted=0.0 -> RAISEしない
-      const params = { ...DEFAULT_PARAMS_LV1, aggression: 1.0, raiseChanceAdjust: 0.0 };
-      
+      const params = {
+        ...DEFAULT_PARAMS_LV1,
+        aggression: 1.0,
+        raiseChanceAdjust: 0.0,
+      };
+
       // rng=0 (本来なら絶対RAISEする乱数値)
       const action = decideLv1(ctx, () => 0, params);
 
@@ -495,8 +505,14 @@ describe("decideLv1", () => {
         hands: {
           0: { downCards: [], upCards: [] },
           1: {
-            downCards: [{ rank: "A", suit: "h" } as Card, { rank: "A", suit: "c" } as Card],
-            upCards: [{ rank: "A", suit: "s" } as Card, { rank: "K", suit: "h" } as Card],
+            downCards: [
+              { rank: "A", suit: "h" } as Card,
+              { rank: "A", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "A", suit: "s" } as Card,
+              { rank: "K", suit: "h" } as Card,
+            ],
           },
         },
       });
@@ -508,7 +524,12 @@ describe("decideLv1", () => {
       };
 
       // aggression=0.5, adjust=1.0 -> adjusted=0.5. tightness=0 (閾値上昇を防ぐ)
-      const params = { ...DEFAULT_PARAMS_LV1, aggression: 0.5, raiseChanceAdjust: 1.0, tightness: 0 };
+      const params = {
+        ...DEFAULT_PARAMS_LV1,
+        aggression: 0.5,
+        raiseChanceAdjust: 1.0,
+        tightness: 0,
+      };
 
       // rng=0 (< 0.5) -> RAISE
       const action = decideLv1(ctx, () => 0, params);

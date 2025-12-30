@@ -152,7 +152,6 @@ const isStraight = (
 export const evaluateStudHi = (cards: Card[]): HighHandResult => {
   // 5枚未満でもペア判定などは行うため、早期リターンは削除
 
-
   const rankGroups = groupByRank(cards, rankToNumberHigh);
   const suitGroups = groupBySuit(cards);
 
