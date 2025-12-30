@@ -15,6 +15,8 @@ export interface CpuParamsLv1 {
   multiwayPenalty: number;
   /** 5th+で慎重になる係数 */
   bigBetFear: number;
+  /** レイズ頻度を調整する係数 (例: 0.5ならレイズ条件を満たしても50%の確率でコールに留まる) */
+  raiseChanceAdjust: number;
 }
 
 /**
@@ -25,8 +27,9 @@ export const DEFAULT_PARAMS_LV1: CpuParamsLv1 = {
   aggression: 0.35,
   bluffFreq: 0.01,
   semiBluffFreq: 0.03,
-  multiwayPenalty: 0.2,
-  bigBetFear: 0.3,
+  multiwayPenalty: 0.1, // 0.2 -> 0.1: Less scared of multiway
+  bigBetFear: 0.2, // 0.3 -> 0.2: Less scared of big bets
+  raiseChanceAdjust: 0.5,
 };
 
 /**

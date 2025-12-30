@@ -206,7 +206,7 @@ export const decideLv1 = (
     // RAISE判定（強いハンド）
     if (legal.includes("RAISE")) {
       const raiseThreshold = thresholds.raiseThreshold + requiredDelta;
-      const aggressionAdjusted = params.aggression * 0.5; // 抑制気味
+      const aggressionAdjusted = params.aggression * params.raiseChanceAdjust; // 抑制気味
       if (handScore >= raiseThreshold && rng() < aggressionAdjusted) {
         return "RAISE";
       }
