@@ -134,12 +134,14 @@ const handleBetting = (
   player.committedThisStreet += actualAdded;
   draft.pot += actualAdded;
 
-  draft.currentBet = event.amount;
-
-  // raiseCountの更新
+  // currentBetの更新
+  // RAISE: 増分を加算（仕様書 7.4: currentBet += streetBetUnit）
+  // BET/COMPLETE/BRING_IN: amountをそのまま設定
   if (event.type === "RAISE") {
+    draft.currentBet += event.amount;
     draft.raiseCount += 1;
   } else {
+    draft.currentBet = event.amount;
     // BRING_IN, COMPLETE, BETはraiseCountを0にリセット
     draft.raiseCount = 0;
   }

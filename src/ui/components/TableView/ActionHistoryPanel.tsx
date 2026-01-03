@@ -72,12 +72,39 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
     return player?.name ?? UI_STRINGS.COMMON.PLAYER_DEFAULT(seatIndex + 1);
   };
 
-  // アクションから金額を取得（存在する場合）
-  const getAmount = (event: Event): number | null => {
-    if ("amount" in event) {
-      return event.amount;
+  // イベントから表示用の金額を取得
+  // RAISEの場合は最終ベット額（到達したcurrentBet）を計算して返す
+  const getDisplayAmount = (
+    event: Event,
+    allEvents: Event[],
+    eventIndex: number,
+  ): number | null => {
+    if (!("amount" in event)) {
+      return null;
     }
-    return null;
+
+    // RAISEの場合、それ以前のイベントからcurrentBetを計算して最終ベット額を返す
+    if (event.type === "RAISE") {
+      let currentBet = 0;
+      // このイベントまでのcurrentBetを計算
+      for (let i = 0; i <= eventIndex; i++) {
+        const e = allEvents[i];
+        if (
+          e.type === "BRING_IN" ||
+          e.type === "COMPLETE" ||
+          e.type === "BET"
+        ) {
+          currentBet = "amount" in e ? e.amount : 0;
+        } else if (e.type === "RAISE") {
+          currentBet += "amount" in e ? e.amount : 0;
+        } else if (e.type === "STREET_ADVANCE") {
+          currentBet = 0; // ストリート進行でリセット
+        }
+      }
+      return currentBet;
+    }
+
+    return event.amount;
   };
 
   if (playerActions.length === 0) {
@@ -109,7 +136,13 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
 
                 const playerName = getPlayerName(seatIndex);
                 const actionLabel = getActionLabel(event.type);
-                const amount = getAmount(event);
+                // 全イベント内でのインデックスを計算
+                const globalIndex = playerActions.indexOf(event);
+                const amount = getDisplayAmount(
+                  event,
+                  playerActions,
+                  globalIndex,
+                );
 
                 return (
                   <div
