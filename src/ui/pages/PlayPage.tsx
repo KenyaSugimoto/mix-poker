@@ -3,6 +3,7 @@ import { useAppStore } from "../../app/store/appStore";
 import type { GameState } from "../../domain/types";
 import { ActionPanel } from "../components/play/ActionPanel";
 import { HamburgerMenu } from "../components/play/HamburgerMenu";
+import { GameTypeChangeOverlay } from "../components/TableView/GameTypeChangeOverlay";
 import { TableView } from "../components/TableView/TableView";
 import { UI_STRINGS } from "../constants/uiStrings";
 
@@ -80,8 +81,21 @@ export const PlayPage: React.FC = () => {
       ? game.dealHistory.find((s) => s.dealId === displayDeal.dealId) || null
       : null;
 
+  // 前回のゲーム種目を取得（dealHistoryの最初のエントリ = 直前のディール）
+  const previousGameType =
+    game.dealHistory.length > 0 ? game.dealHistory[0].gameType : null;
+
   return (
     <div className="h-full w-full flex flex-col p-4 overflow-hidden">
+      {/* ゲーム種目変更通知オーバーレイ */}
+      {game.currentDeal && (
+        <GameTypeChangeOverlay
+          currentGameType={game.currentDeal.gameType}
+          previousGameType={previousGameType}
+          isDealActive={!isDealFinished}
+        />
+      )}
+
       {/* ハンバーガーメニュー */}
       <div className="flex-shrink-0 flex justify-end mb-2">
         <HamburgerMenu
