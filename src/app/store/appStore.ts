@@ -563,17 +563,4 @@ if (import.meta.env.DEV) {
   // 現在のstateを取得するヘルパー関数も追加
   (window as unknown as { getState: () => AppStore }).getState = () =>
     useAppStore.getState();
-
-  // コンソールに使い方を表示
-  console.log(
-    "%c🔍 Zustand DevTools",
-    "color: #4CAF50; font-weight: bold; font-size: 14px;",
-  );
-  console.log(
-    "%c使い方:",
-    "color: #2196F3; font-weight: bold;",
-    "\n- Redux DevTools拡張機能をインストールして使用",
-    "\n- コンソールで $store.getState() で現在のstateを確認",
-    "\n- または window.$store でストアに直接アクセス",
-  );
 }

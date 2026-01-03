@@ -139,6 +139,7 @@ export const decideLv1 = (
 
   // 3. ハンドスコアを計算
   const handScore = calcHandScore(obs);
+  console.log("handScore: ", handScore);
 
   // 4. 要求スコアを計算
   const required = calcRequiredScore(obs, params);
@@ -156,6 +157,8 @@ export const decideLv1 = (
   if (obs.street === "3rd" && obs.bringInIndex === obs.me.seat) {
     if (legal.includes("COMPLETE")) {
       const completeThreshold = thresholds.completeThreshold;
+      console.log("completeThreshold: ", completeThreshold);
+
       if (handScore >= completeThreshold) {
         return "COMPLETE";
       }
@@ -206,7 +209,7 @@ export const decideLv1 = (
     // RAISE判定（強いハンド）
     if (legal.includes("RAISE")) {
       const raiseThreshold = thresholds.raiseThreshold + requiredDelta;
-      const aggressionAdjusted = params.aggression * 0.5; // 抑制気味
+      const aggressionAdjusted = params.aggression * params.raiseChanceAdjust; // 抑制気味
       if (handScore >= raiseThreshold && rng() < aggressionAdjusted) {
         return "RAISE";
       }

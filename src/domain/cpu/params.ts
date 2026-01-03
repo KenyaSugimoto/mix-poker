@@ -15,18 +15,21 @@ export interface CpuParamsLv1 {
   multiwayPenalty: number;
   /** 5th+で慎重になる係数 */
   bigBetFear: number;
+  /** レイズ頻度を調整する係数 (例: 0.5ならレイズ条件を満たしても50%の確率でコールに留まる) */
+  raiseChanceAdjust: number;
 }
 
 /**
  * デフォルトパラメータ（堅実寄り）
  */
 export const DEFAULT_PARAMS_LV1: CpuParamsLv1 = {
-  tightness: 0.75,
-  aggression: 0.35,
-  bluffFreq: 0.01,
-  semiBluffFreq: 0.03,
-  multiwayPenalty: 0.2,
-  bigBetFear: 0.3,
+  tightness: 0.2, // 0.75 -> 0.2: Requires less score to act
+  aggression: 0.4, // 0.35 -> 0.4: More likely to raise
+  bluffFreq: 0.05, // 0.01 -> 0.05: Slightly more random bluffs
+  semiBluffFreq: 0.15, // 0.03 -> 0.15: More semi-bluffs
+  multiwayPenalty: 0.1, // 0.2 -> 0.1: Less scared of multiway
+  bigBetFear: 0.2, // 0.3 -> 0.2: Less scared of big bets
+  raiseChanceAdjust: 0.5,
 };
 
 /**
@@ -52,14 +55,14 @@ export const STREET_THRESHOLDS: Record<
   StreetThresholds
 > = {
   "3rd": {
-    completeThreshold: 70,
+    completeThreshold: 60, // 70 -> 60: One Pair likely competes
     betThreshold: 0,
     raiseThreshold: 0,
     foldThreshold: 40,
   },
   "4th": {
     completeThreshold: 0,
-    betThreshold: 62,
+    betThreshold: 58, // 62 -> 58: Weak pair can bet
     raiseThreshold: 75,
     foldThreshold: 42,
   },
@@ -87,9 +90,9 @@ export const STREET_THRESHOLDS: Record<
  * HandRank から madeScore への変換テーブル
  */
 export const HAND_RANK_SCORES: Record<string, number> = {
-  STRAIGHT_FLUSH: 98,
-  FOUR_OF_A_KIND: 95,
-  FULL_HOUSE: 92,
+  STRAIGHT_FLUSH: 100,
+  FOUR_OF_A_KIND: 99,
+  FULL_HOUSE: 98,
   FLUSH: 88,
   STRAIGHT: 84,
   THREE_OF_A_KIND: 78,
