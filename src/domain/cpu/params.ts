@@ -24,7 +24,7 @@ export interface CpuParamsLv1 {
  */
 export const DEFAULT_PARAMS_LV1: CpuParamsLv1 = {
   tightness: 0.2, // 0.75 -> 0.2: Requires less score to act
-  aggression: 0.6, // 0.35 -> 0.6: More likely to raise
+  aggression: 0.4, // 0.35 -> 0.4: More likely to raise
   bluffFreq: 0.05, // 0.01 -> 0.05: Slightly more random bluffs
   semiBluffFreq: 0.15, // 0.03 -> 0.15: More semi-bluffs
   multiwayPenalty: 0.1, // 0.2 -> 0.1: Less scared of multiway
@@ -55,7 +55,7 @@ export const STREET_THRESHOLDS: Record<
   StreetThresholds
 > = {
   "3rd": {
-    completeThreshold: 60, // 70 -> 60: One Pair likely competes
+    completeThreshold: 50, // 70 -> 50: One Pair likely competes
     betThreshold: 0,
     raiseThreshold: 0,
     foldThreshold: 40,
@@ -90,9 +90,9 @@ export const STREET_THRESHOLDS: Record<
  * HandRank から madeScore への変換テーブル
  */
 export const HAND_RANK_SCORES: Record<string, number> = {
-  STRAIGHT_FLUSH: 98,
-  FOUR_OF_A_KIND: 95,
-  FULL_HOUSE: 92,
+  STRAIGHT_FLUSH: 100,
+  FOUR_OF_A_KIND: 99,
+  FULL_HOUSE: 98,
   FLUSH: 88,
   STRAIGHT: 84,
   THREE_OF_A_KIND: 78,
