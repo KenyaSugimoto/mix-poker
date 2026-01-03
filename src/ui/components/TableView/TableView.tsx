@@ -107,8 +107,8 @@ export const TableView: React.FC<TableViewProps> = ({
       <div className="absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
         <PotStackBadge pot={deal.pot} ante={deal.ante} />
         {/* ポット額（コンパクト） */}
-        <div className="rounded-lg border border-white/10 bg-poker-green/80 px-3 py-2 shadow-md backdrop-blur-sm">
-          <div className="text-sm font-bold tabular-nums text-white">
+        <div className="mt-1">
+          <div className="text-sm font-bold tabular-nums text-white drop-shadow-md">
             {deal.pot}
           </div>
         </div>

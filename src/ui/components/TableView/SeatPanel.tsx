@@ -108,7 +108,7 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
             </div>
           )}
           {!player.active && (
-            <div className="text-xs text-destructive font-semibold">FOLDED</div>
+            <div className="text-xs text-destructive font-semibold">FOLD</div>
           )}
           {winningsAmount !== null &&
             winningsAmount !== undefined &&
