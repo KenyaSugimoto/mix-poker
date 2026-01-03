@@ -238,13 +238,14 @@ describe("computeBringInIndex", () => {
   });
 
   it("Razzで最強のアップカード（rank最大）を持つプレイヤーがbring-inになること", () => {
+    // RazzではAceはLow（A=1）として扱われるため、Kが最大（13）
     const state: DealState = {
       ...baseState,
       gameType: "razz",
       hands: {
         0: {
           downCards: [],
-          upCards: [{ rank: "K", suit: "c" }], // K
+          upCards: [{ rank: "K", suit: "c" }], // K（rank最大=13）→ BringIn対象
         },
         1: {
           downCards: [],
@@ -252,13 +253,13 @@ describe("computeBringInIndex", () => {
         },
         2: {
           downCards: [],
-          upCards: [{ rank: "A", suit: "c" }], // A（最強）
+          upCards: [{ rank: "A", suit: "c" }], // A（rank最小=1）
         },
       },
     };
 
     const bringInIndex = computeBringInIndex(state);
-    expect(bringInIndex).toBe(2); // seat 2が最強（A）
+    expect(bringInIndex).toBe(0); // seat 0がrank最大（K=13）
   });
 
   it("同rankの場合、スート順でタイブレークされること（Stud Hi）", () => {
