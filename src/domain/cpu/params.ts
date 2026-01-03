@@ -55,7 +55,7 @@ export const STREET_THRESHOLDS: Record<
   StreetThresholds
 > = {
   "3rd": {
-    completeThreshold: 50, // 70 -> 50: One Pair likely competes
+    completeThreshold: 60, // 70 -> 60: One Pair likely competes
     betThreshold: 0,
     raiseThreshold: 0,
     foldThreshold: 40,
