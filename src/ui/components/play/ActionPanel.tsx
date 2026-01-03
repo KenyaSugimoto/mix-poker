@@ -59,7 +59,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = () => {
           deal.street === "3rd" || deal.street === "4th"
             ? deal.smallBet
             : deal.bigBet;
-        return `Raise (${raiseUnit})`;
+        return `Raise to (${deal.currentBet + raiseUnit})`;
       }
       case "CALL": {
         const toCall = Math.max(

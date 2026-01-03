@@ -806,4 +806,188 @@ describe("applyEvent", () => {
       expect(nextState.deck).toHaveLength(49);
     });
   });
+
+  describe("RAISE/COMPLETEイベント", () => {
+    const threePlayerState: DealState = {
+      ...initialState,
+      playerCount: 3,
+      players: [
+        {
+          seat: 0,
+          kind: "human",
+          active: true,
+          stack: 1000,
+          committedTotal: 0,
+          committedThisStreet: 0,
+        },
+        {
+          seat: 1,
+          kind: "cpu",
+          active: true,
+          stack: 1000,
+          committedTotal: 0,
+          committedThisStreet: 0,
+        },
+        {
+          seat: 2,
+          kind: "cpu",
+          active: true,
+          stack: 1000,
+          committedTotal: 0,
+          committedThisStreet: 0,
+        },
+      ],
+    };
+
+    it("COMPLETEイベントでcurrentBetがsmallBetになること", () => {
+      // BRING_IN後の状態
+      const afterBringIn = applyEvent(threePlayerState, {
+        id: "e1",
+        type: "BRING_IN",
+        seat: 0,
+        street: "3rd",
+        amount: 20,
+        timestamp: Date.now(),
+      });
+      expect(afterBringIn.currentBet).toBe(20);
+
+      // COMPLETE
+      const afterComplete: Event = {
+        id: "e2",
+        type: "COMPLETE",
+        seat: 1,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 40, // smallBet
+      };
+      const completeState = applyEvent(afterBringIn, afterComplete);
+      expect(completeState.currentBet).toBe(40); // smallBetに設定
+      expect(completeState.raiseCount).toBe(0);
+    });
+
+    it("RAISEイベントでcurrentBetが正しく増加すること（COMPLETE後）", () => {
+      // BRING_IN
+      let state = applyEvent(threePlayerState, {
+        id: "e1",
+        type: "BRING_IN",
+        seat: 0,
+        street: "3rd",
+        amount: 20,
+        timestamp: Date.now(),
+      });
+
+      // COMPLETE (currentBet = smallBet = 40)
+      state = applyEvent(state, {
+        id: "e2",
+        type: "COMPLETE",
+        seat: 1,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 40,
+      });
+      expect(state.currentBet).toBe(40);
+
+      // RAISE (currentBet += smallBet = 40 + 40 = 80)
+      state = applyEvent(state, {
+        id: "e3",
+        type: "RAISE",
+        seat: 2,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 40, // streetBetUnit (smallBet)
+      });
+      expect(state.currentBet).toBe(80);
+      expect(state.raiseCount).toBe(1);
+    });
+
+    it("連続RAISEでcurrentBetが正しく増加すること", () => {
+      // BRING_IN
+      let state = applyEvent(threePlayerState, {
+        id: "e1",
+        type: "BRING_IN",
+        seat: 0,
+        street: "3rd",
+        amount: 20,
+        timestamp: Date.now(),
+      });
+
+      // COMPLETE (currentBet = 40)
+      state = applyEvent(state, {
+        id: "e2",
+        type: "COMPLETE",
+        seat: 1,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 40,
+      });
+
+      // 1st RAISE (currentBet = 40 + 40 = 80)
+      state = applyEvent(state, {
+        id: "e3",
+        type: "RAISE",
+        seat: 2,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 40,
+      });
+      expect(state.currentBet).toBe(80);
+      expect(state.raiseCount).toBe(1);
+
+      // 2nd RAISE (currentBet = 80 + 40 = 120)
+      state = applyEvent(state, {
+        id: "e4",
+        type: "RAISE",
+        seat: 0,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 40,
+      });
+      expect(state.currentBet).toBe(120);
+      expect(state.raiseCount).toBe(2);
+
+      // 3rd RAISE (currentBet = 120 + 40 = 160)
+      state = applyEvent(state, {
+        id: "e5",
+        type: "RAISE",
+        seat: 1,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 40,
+      });
+      expect(state.currentBet).toBe(160);
+      expect(state.raiseCount).toBe(3);
+    });
+
+    it("BigBetストリートでRAISEが正しく機能すること", () => {
+      // 5thストリート（bigBet使用）の状態
+      const state5th: DealState = {
+        ...threePlayerState,
+        street: "5th",
+        currentBet: 0,
+      };
+
+      // BET (currentBet = bigBet = 80)
+      let state = applyEvent(state5th, {
+        id: "e1",
+        type: "BET",
+        seat: 0,
+        street: "5th",
+        timestamp: Date.now(),
+        amount: 80,
+      });
+      expect(state.currentBet).toBe(80);
+
+      // RAISE (currentBet = 80 + 80 = 160)
+      state = applyEvent(state, {
+        id: "e2",
+        type: "RAISE",
+        seat: 1,
+        street: "5th",
+        timestamp: Date.now(),
+        amount: 80, // bigBet
+      });
+      expect(state.currentBet).toBe(160);
+      expect(state.raiseCount).toBe(1);
+    });
+  });
 });
