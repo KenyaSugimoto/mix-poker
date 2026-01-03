@@ -1,7 +1,6 @@
 import type React from "react";
 import type { DealState, PlayerState } from "../../../domain/types";
 import { getActionLabel, getLastAction } from "../../utils/actionLabel";
-import { ActiveIndicator } from "./ActiveIndicator";
 import { PlayerCards } from "./PlayerCards";
 
 interface SeatPanelProps {
@@ -76,14 +75,12 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
       </div>
       <div
         className={`relative bg-card rounded-xl p-4 shadow-sm border min-w-[160px] transition-all ${
-          isCurrentActor
-            ? "ring-2 ring-poker-gold ring-offset-2 ring-offset-background"
-            : ""
-        } ${isWinner ? "border-2 border-poker-gold" : ""} ${
-          !player.active ? "opacity-50" : ""
-        }`}
+          isWinner ? "border-2 border-poker-gold" : ""
+        } ${!player.active ? "opacity-50" : ""}`}
       >
-        {!isDealFinished && <ActiveIndicator isActive={isCurrentActor} />}
+        {isCurrentActor && !isDealFinished && (
+          <div className="absolute inset-0 rounded-xl ring-2 ring-poker-gold ring-offset-2 ring-offset-background animate-pulse pointer-events-none z-10" />
+        )}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="font-semibold text-sm">
