@@ -76,8 +76,10 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
       </div>
       <div
         className={`relative bg-card rounded-xl p-4 shadow-sm border min-w-[160px] transition-all ${
-          isCurrentActor ? "ring-2 ring-primary ring-offset-2" : ""
-        } ${isWinner ? "ring-2 ring-yellow-400 ring-offset-2 bg-yellow-50/10" : ""} ${
+          isCurrentActor
+            ? "ring-2 ring-poker-gold ring-offset-2 ring-offset-background"
+            : ""
+        } ${isWinner ? "border-2 border-poker-gold" : ""} ${
           !player.active ? "opacity-50" : ""
         }`}
       >
@@ -91,7 +93,7 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
               </span>
             </div>
             {isWinner && (
-              <div className="text-xs font-bold text-yellow-400">WINNER</div>
+              <div className="text-xs font-bold text-poker-gold">WINNER</div>
             )}
           </div>
           {isDealFinished && player.active && handRankLabel && (
@@ -114,7 +116,7 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
           {winningsAmount !== null &&
             winningsAmount !== undefined &&
             winningsAmount > 0 && (
-              <div className="text-sm font-bold text-green-500">
+              <div className="text-sm font-bold text-poker-gold">
                 +{winningsAmount}
               </div>
             )}

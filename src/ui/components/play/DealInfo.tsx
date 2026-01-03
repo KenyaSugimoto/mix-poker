@@ -9,7 +9,7 @@ interface DealInfoProps {
 
 export const DealInfo: React.FC<DealInfoProps> = ({ deal }) => {
   return (
-    <div className="bg-black/60 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-white/20 min-w-[200px]">
+    <div className="bg-poker-green/90 backdrop-blur-sm rounded-lg p-2 shadow-lg border border-white/20 min-w-[200px]">
       <div className="flex flex-col gap-1.5">
         {/* ステークス情報 */}
         <div className="flex items-center justify-between gap-3 text-[10px]">

@@ -73,26 +73,26 @@ export const GameTypeChangeOverlay: React.FC<GameTypeChangeOverlayProps> = ({
           isFading ? "scale-95" : "scale-100"
         }`}
       >
-        <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl px-10 py-8 shadow-2xl border-2 border-amber-300/50">
+        <div className="bg-gradient-to-br from-poker-gold to-yellow-600 rounded-2xl px-10 py-8 shadow-2xl border-2 border-white/40">
           {/* 装飾的なリングエフェクト */}
-          <div className="absolute inset-0 rounded-2xl animate-pulse bg-amber-400/20" />
+          <div className="absolute inset-0 rounded-2xl animate-pulse bg-white/20" />
 
           <div className="relative text-center space-y-3">
             {/* ヘッダーテキスト */}
-            <p className="text-amber-100 text-sm font-medium tracking-wider uppercase">
+            <p className="text-yellow-900 text-sm font-medium tracking-wider uppercase">
               Game Type Changed
             </p>
 
             {/* ゲーム種目名 */}
-            <h2 className="text-white text-4xl font-black tracking-tight drop-shadow-lg">
+            <h2 className="text-yellow-950 text-4xl font-black tracking-tight drop-shadow-sm">
               {getGameTypeLabel(currentGameType)}
             </h2>
 
             {/* 下部のアクセント */}
             <div className="flex items-center justify-center gap-2 pt-2">
-              <div className="h-0.5 w-12 bg-amber-200/50 rounded-full" />
-              <div className="h-1.5 w-1.5 bg-amber-200 rounded-full" />
-              <div className="h-0.5 w-12 bg-amber-200/50 rounded-full" />
+              <div className="h-0.5 w-12 bg-yellow-900/40 rounded-full" />
+              <div className="h-1.5 w-1.5 bg-yellow-900 rounded-full" />
+              <div className="h-0.5 w-12 bg-yellow-900/40 rounded-full" />
             </div>
           </div>
         </div>

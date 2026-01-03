@@ -90,7 +90,7 @@ export const TableView: React.FC<TableViewProps> = ({
 
   return (
     <div
-      className={`relative w-full h-full ${getTableSize(deal.playerCount)} bg-gradient-to-br from-green-900 to-green-800 rounded-2xl shadow-xl border-4 border-green-700 overflow-hidden p-8`}
+      className={`relative w-full h-full ${getTableSize(deal.playerCount)} bg-poker-base rounded-2xl shadow-xl border-4 border-poker-green overflow-hidden p-8`}
     >
       {/* DealInfo（左上） */}
       <div className="absolute top-4 left-4 z-20">
@@ -107,7 +107,7 @@ export const TableView: React.FC<TableViewProps> = ({
       <div className="absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
         <PotStackBadge pot={deal.pot} ante={deal.ante} />
         {/* ポット額（コンパクト） */}
-        <div className="rounded-lg border border-white/10 bg-black/35 px-3 py-2 shadow-md backdrop-blur-sm">
+        <div className="rounded-lg border border-white/10 bg-poker-green/80 px-3 py-2 shadow-md backdrop-blur-sm">
           <div className="text-sm font-bold tabular-nums text-white">
             {deal.pot}
           </div>
@@ -116,8 +116,8 @@ export const TableView: React.FC<TableViewProps> = ({
 
       {/* ゲーム種目表示カード */}
       <div className="absolute top-[56%] left-[44%] -translate-x-1/2 -translate-y-1/2 z-10">
-        <div className="bg-amber-400/95 backdrop-blur-sm rounded-sm px-2 py-0.5 shadow-[0_4px_10px_rgba(0,0,0,0.5)] border border-amber-600/60">
-          <span className="text-[10px] text-amber-950 tracking-tight">
+        <div className="bg-poker-green/90 backdrop-blur-sm rounded-sm px-3 py-1 shadow-[0_4px_10px_rgba(0,0,0,0.5)] border border-white/20">
+          <span className="text-[10px] text-white tracking-tight">
             <span className="font-black">
               {getGameTypeLabel(deal.gameType)}
             </span>

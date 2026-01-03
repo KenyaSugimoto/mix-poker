@@ -31,11 +31,20 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
+
+  --color-poker-base: var(--poker-base);
+  --color-poker-green: var(--poker-green);
+  --color-poker-gold: var(--poker-gold);
 }
 
 :root {
   --background: #ffffff;
   --foreground: #09090b;
+
+  /* Poker App Specific Palette (Fixed) */
+  --poker-base: #1c1c1e;
+  --poker-green: #064e3b;
+  --poker-gold: #fbbf24;
 
   --card: #ffffff;
   --card-foreground: #09090b;
@@ -43,7 +52,7 @@
   --popover: #ffffff;
   --popover-foreground: #09090b;
 
-  --primary: #18181b;
+  --primary: #064e3b; /* Using Design Rule Deep Green for Primary */
   --primary-foreground: #fafafa;
 
   --secondary: #f4f4f5;
@@ -52,7 +61,7 @@
   --muted: #f4f4f5;
   --muted-foreground: #71717a;
 
-  --accent: #f4f4f5;
+  --accent: #fbbf24; /* Using Design Rule Gold for Accent */
   --accent-foreground: #18181b;
 
   --destructive: #ef4444;
@@ -76,8 +85,8 @@
     --popover: #09090b;
     --popover-foreground: #fafafa;
 
-    --primary: #fafafa;
-    --primary-foreground: #18181b;
+    --primary: #064e3b;
+    --primary-foreground: #fafafa;
 
     --secondary: #27272a;
     --secondary-foreground: #fafafa;
@@ -85,8 +94,8 @@
     --muted: #27272a;
     --muted-foreground: #a1a1aa;
 
-    --accent: #27272a;
-    --accent-foreground: #fafafa;
+    --accent: #fbbf24;
+    --accent-foreground: #18181b;
 
     --destructive: #7f1d1d;
     --destructive-foreground: #fafafa;
