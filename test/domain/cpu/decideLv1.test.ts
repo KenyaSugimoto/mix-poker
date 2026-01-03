@@ -116,9 +116,9 @@ describe("decideLv1", () => {
     });
   });
 
-  describe("3rd bring-in シナリオ", () => {
-    it("強い手でCOMPLETEを選択すること", () => {
-      // 強い手（ペア）
+  describe("3rdストリート シナリオ", () => {
+    it("ブリングインプレイヤーは強い手でも常にBRING_INを選択すること", () => {
+      // 強い手（ペア）でもブリングインプレイヤーはBRING_IN固定
       const state = createTestState({
         street: "3rd",
         currentBet: 0,
@@ -149,17 +149,114 @@ describe("decideLv1", () => {
 
       const action = decideLv1(ctx, () => 0.5);
 
-      // ペアエースは強いが、complete閾値(70)に達していない可能性がある
-      // 合法なアクションが返されることを確認
-      expect(["BRING_IN", "COMPLETE"]).toContain(action);
+      // ブリングインプレイヤーは常にBRING_INを選択
+      expect(action).toBe("BRING_IN");
     });
 
-    it("弱い手でBRING_INを選択すること", () => {
-      // 弱い手（ノーペア、低い札）
+    it("非ブリングインプレイヤーで強い手の場合COMPLETEを選択すること", () => {
+      // 非ブリングインプレイヤーがCOMPLETE権を持つ場合
       const state = createTestState({
         street: "3rd",
-        currentBet: 0,
-        bringInIndex: 1,
+        currentBet: 20, // bring-in後
+        playerCount: 3,
+        players: [
+          {
+            seat: 0,
+            kind: "human",
+            active: true,
+            stack: 900,
+            committedTotal: 30,
+            committedThisStreet: 20,
+          },
+          {
+            seat: 1,
+            kind: "cpu",
+            active: true,
+            stack: 990,
+            committedTotal: 10,
+            committedThisStreet: 0,
+          }, // COMPLETE権あり
+          {
+            seat: 2,
+            kind: "cpu",
+            active: true,
+            stack: 980,
+            committedTotal: 30,
+            committedThisStreet: 20,
+          },
+        ],
+        bringInIndex: 0,
+        currentActorIndex: 1,
+        hands: {
+          0: {
+            downCards: [
+              { rank: "2", suit: "c" } as Card,
+              { rank: "3", suit: "c" } as Card,
+            ],
+            upCards: [{ rank: "8", suit: "h" } as Card],
+          },
+          1: {
+            downCards: [
+              { rank: "A", suit: "h" } as Card,
+              { rank: "A", suit: "c" } as Card, // ペア（強い手）
+            ],
+            upCards: [{ rank: "K", suit: "s" } as Card],
+          },
+          2: {
+            downCards: [
+              { rank: "5", suit: "d" } as Card,
+              { rank: "6", suit: "s" } as Card,
+            ],
+            upCards: [{ rank: "4", suit: "c" } as Card],
+          },
+        },
+      });
+
+      const ctx: CpuDecisionContext = {
+        state,
+        seat: 1,
+        allowedActions: ["CALL", "FOLD", "COMPLETE"], // BRING_INはない
+      };
+
+      const action = decideLv1(ctx, () => 0.5);
+
+      // 強い手でCOMPLETE権がある場合はCOMPLETE
+      expect(action).toBe("COMPLETE");
+    });
+
+    it("非ブリングインプレイヤーで弱い手の場合CALLを選択すること", () => {
+      const state = createTestState({
+        street: "3rd",
+        currentBet: 20,
+        playerCount: 3,
+        players: [
+          {
+            seat: 0,
+            kind: "human",
+            active: true,
+            stack: 900,
+            committedTotal: 30,
+            committedThisStreet: 20,
+          },
+          {
+            seat: 1,
+            kind: "cpu",
+            active: true,
+            stack: 990,
+            committedTotal: 10,
+            committedThisStreet: 0,
+          },
+          {
+            seat: 2,
+            kind: "cpu",
+            active: true,
+            stack: 980,
+            committedTotal: 30,
+            committedThisStreet: 20,
+          },
+        ],
+        bringInIndex: 0,
+        currentActorIndex: 1,
         hands: {
           0: {
             downCards: [
@@ -171,9 +268,16 @@ describe("decideLv1", () => {
           1: {
             downCards: [
               { rank: "2", suit: "c" } as Card,
-              { rank: "4", suit: "h" } as Card,
+              { rank: "4", suit: "h" } as Card, // 弱い手
             ],
             upCards: [{ rank: "6", suit: "d" } as Card],
+          },
+          2: {
+            downCards: [
+              { rank: "5", suit: "d" } as Card,
+              { rank: "6", suit: "s" } as Card,
+            ],
+            upCards: [{ rank: "4", suit: "c" } as Card],
           },
         },
       });
@@ -181,12 +285,84 @@ describe("decideLv1", () => {
       const ctx: CpuDecisionContext = {
         state,
         seat: 1,
-        allowedActions: ["BRING_IN", "COMPLETE"],
+        allowedActions: ["CALL", "FOLD", "COMPLETE"],
       };
 
       const action = decideLv1(ctx, () => 0.5);
 
-      expect(action).toBe("BRING_IN");
+      // 弱い手ではCOMPLETEせずCALL
+      expect(action).toBe("CALL");
+    });
+
+    it("3rdでCOMPLETE後にRAISEされた場合、CALL/FOLD/RAISEから選択すること", () => {
+      const state = createTestState({
+        street: "3rd",
+        currentBet: 80, // COMPLETE後にRAISE
+        raiseCount: 1,
+        playerCount: 3,
+        players: [
+          {
+            seat: 0,
+            kind: "human",
+            active: true,
+            stack: 850,
+            committedTotal: 90,
+            committedThisStreet: 80,
+          },
+          {
+            seat: 1,
+            kind: "cpu",
+            active: true,
+            stack: 990,
+            committedTotal: 10,
+            committedThisStreet: 0,
+          },
+          {
+            seat: 2,
+            kind: "cpu",
+            active: true,
+            stack: 930,
+            committedTotal: 50,
+            committedThisStreet: 40,
+          },
+        ],
+        bringInIndex: 0,
+        currentActorIndex: 1,
+        hands: {
+          0: {
+            downCards: [
+              { rank: "A", suit: "s" } as Card,
+              { rank: "K", suit: "s" } as Card,
+            ],
+            upCards: [{ rank: "Q", suit: "s" } as Card],
+          },
+          1: {
+            downCards: [
+              { rank: "T", suit: "c" } as Card,
+              { rank: "9", suit: "h" } as Card,
+            ],
+            upCards: [{ rank: "8", suit: "d" } as Card],
+          },
+          2: {
+            downCards: [
+              { rank: "5", suit: "d" } as Card,
+              { rank: "6", suit: "s" } as Card,
+            ],
+            upCards: [{ rank: "4", suit: "c" } as Card],
+          },
+        },
+      });
+
+      const ctx: CpuDecisionContext = {
+        state,
+        seat: 1,
+        allowedActions: ["CALL", "FOLD", "RAISE"], // COMPLETEはない
+      };
+
+      const action = decideLv1(ctx, () => 0.5);
+
+      // 合法なアクションから選択される
+      expect(["CALL", "FOLD", "RAISE"]).toContain(action);
     });
   });
 
