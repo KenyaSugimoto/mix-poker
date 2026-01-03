@@ -59,7 +59,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = () => {
           deal.street === "3rd" || deal.street === "4th"
             ? deal.smallBet
             : deal.bigBet;
-        return `Raise to (${deal.currentBet + raiseUnit})`;
+        return `Raise (${deal.currentBet + raiseUnit})`;
       }
       case "CALL": {
         const toCall = Math.max(
@@ -77,6 +77,21 @@ export const ActionPanel: React.FC<ActionPanelProps> = () => {
     }
   };
 
+  // Define the order of actions: Passive (Left) -> Aggressive (Right)
+  const actionOrder: Record<string, number> = {
+    FOLD: 0,
+    CHECK: 1,
+    CALL: 2,
+    BRING_IN: 3,
+    COMPLETE: 4,
+    BET: 5,
+    RAISE: 6,
+  };
+
+  const sortedActions = [...humanActions].sort((a, b) => {
+    return (actionOrder[a] ?? 99) - (actionOrder[b] ?? 99);
+  });
+
   return (
     <div className="bg-card rounded-xl p-3 shadow-sm border">
       <div className="flex flex-wrap gap-2">
@@ -84,12 +99,12 @@ export const ActionPanel: React.FC<ActionPanelProps> = () => {
           Your Action
         </div>
         <div className="flex flex-wrap gap-4 border-l pl-4">
-          {humanActions.map((action) => (
+          {sortedActions.map((action) => (
             <button
               key={action}
               type="button"
               onClick={() => handleAction(action)}
-              className="px-3 py-2 text-sm bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="px-4 py-2.5 text-sm bg-primary text-primary-foreground rounded-lg font-bold shadow-sm hover:bg-primary/90 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
             >
               {getActionLabel(action)}
             </button>

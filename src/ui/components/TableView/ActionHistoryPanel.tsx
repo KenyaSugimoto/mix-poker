@@ -112,9 +112,9 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
   }
 
   return (
-    <div className="absolute top-4 right-4 z-20 w-56 max-h-52 rounded-lg border border-white/20 bg-black/60 backdrop-blur-sm shadow-lg">
+    <div className="absolute top-4 right-4 z-20 w-56 max-h-52 rounded-lg border border-poker-gold/30 bg-poker-green/90 backdrop-blur-sm shadow-xl">
       <div className="px-3 py-2 border-b border-white/10">
-        <h3 className="text-xs font-semibold text-white/80">
+        <h3 className="text-xs font-bold text-poker-gold">
           {UI_STRINGS.PLAY.ACTION_HISTORY_TITLE(dealIndex + 1)}
         </h3>
       </div>
@@ -125,7 +125,7 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
         {activeStreets.map((street, streetIndex) => (
           <div key={street} className={streetIndex > 0 ? "mt-2" : ""}>
             {/* ストリートヘッダー */}
-            <div className="text-[10px] font-semibold text-blue-400/80 mb-1 pb-0.5 border-b border-white/10">
+            <div className="text-[10px] font-semibold text-white/70 mb-1 pb-0.5 border-b border-white/10">
               {STREET_LABELS[street]}
             </div>
             {/* そのストリートのアクション */}
@@ -149,13 +149,13 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
                     key={event.id || `${street}-${index}`}
                     className="text-xs text-white/90 grid grid-cols-[70px_auto] gap-1 items-center"
                   >
-                    <span className="font-medium text-amber-400 truncate text-right pr-1">
+                    <span className="font-medium text-poker-gold truncate text-right pr-1">
                       {playerName}
                     </span>
                     <span className="flex items-center gap-1">
                       <span className="text-white/90">{actionLabel}</span>
                       {amount !== null && (
-                        <span className="text-emerald-400 font-medium">
+                        <span className="text-poker-gold font-medium">
                           {amount}
                         </span>
                       )}

@@ -1,7 +1,6 @@
 import type React from "react";
 import type { DealState, PlayerState } from "../../../domain/types";
 import { getActionLabel, getLastAction } from "../../utils/actionLabel";
-import { ActiveIndicator } from "./ActiveIndicator";
 import { PlayerCards } from "./PlayerCards";
 
 interface SeatPanelProps {
@@ -76,12 +75,12 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
       </div>
       <div
         className={`relative bg-card rounded-xl p-4 shadow-sm border min-w-[160px] transition-all ${
-          isCurrentActor ? "ring-2 ring-primary ring-offset-2" : ""
-        } ${isWinner ? "ring-2 ring-yellow-400 ring-offset-2 bg-yellow-50/10" : ""} ${
-          !player.active ? "opacity-50" : ""
-        }`}
+          isWinner ? "border-2 border-poker-gold" : ""
+        } ${!player.active ? "opacity-50" : ""}`}
       >
-        {!isDealFinished && <ActiveIndicator isActive={isCurrentActor} />}
+        {isCurrentActor && !isDealFinished && (
+          <div className="absolute inset-0 rounded-xl ring-2 ring-poker-gold ring-offset-2 ring-offset-background animate-pulse pointer-events-none z-10" />
+        )}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="font-semibold text-sm">
@@ -91,7 +90,7 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
               </span>
             </div>
             {isWinner && (
-              <div className="text-xs font-bold text-yellow-400">WINNER</div>
+              <div className="text-xs font-bold text-poker-gold">WINNER</div>
             )}
           </div>
           {isDealFinished && player.active && handRankLabel && (
@@ -109,12 +108,12 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
             </div>
           )}
           {!player.active && (
-            <div className="text-xs text-destructive font-semibold">FOLDED</div>
+            <div className="text-xs text-destructive font-semibold">FOLD</div>
           )}
           {winningsAmount !== null &&
             winningsAmount !== undefined &&
             winningsAmount > 0 && (
-              <div className="text-sm font-bold text-green-500">
+              <div className="text-sm font-bold text-poker-gold">
                 +{winningsAmount}
               </div>
             )}
