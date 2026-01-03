@@ -153,19 +153,22 @@ export const decideLv1 = (
   const numActive = obs.players.filter((p) => p.active).length;
   const drawScore = getDrawScore(obs);
 
-  // === 3rd Bring-in 処理 ===
-  if (obs.street === "3rd" && obs.bringInIndex === obs.me.seat) {
+  // === 3rdストリート処理 ===
+  if (obs.street === "3rd") {
+    // ブリングインプレイヤーの初回アクション: 常にBRING_IN
+    if (legal.includes("BRING_IN")) {
+      return "BRING_IN";
+    }
+
+    // 非ブリングインプレイヤー: COMPLETE判定（閾値以上の場合）
     if (legal.includes("COMPLETE")) {
       const completeThreshold = thresholds.completeThreshold;
-      console.log("completeThreshold: ", completeThreshold);
-
       if (handScore >= completeThreshold) {
         return "COMPLETE";
       }
     }
-    if (legal.includes("BRING_IN")) {
-      return "BRING_IN";
-    }
+
+    // 3rdでcurrentBet > 0の場合は通常のCALL/FOLD/RAISE判定へ
   }
 
   // === currentBet == 0 の処理（CHECK / BET） ===
