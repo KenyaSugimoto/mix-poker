@@ -165,9 +165,9 @@ export const computeBringInIndex = (state: DealState): SeatIndex => {
   upCards.sort((a, b) => {
     if (isRazz) {
       // Razz：rank最大がbring-in（降順）
-      // bring-in判定ではHigh Handのrank値を使用（A=14が最大）
-      const aRank = rankToNumberForHighHand(a.card.rank);
-      const bRank = rankToNumberForHighHand(b.card.rank);
+      // RazzではAceはLowとして扱う（A=1）、Kが最大（13）
+      const aRank = rankToNumberForLowHand(a.card.rank);
+      const bRank = rankToNumberForLowHand(b.card.rank);
 
       if (aRank !== bRank) {
         return bRank - aRank;
