@@ -85,7 +85,7 @@ const CHIP_TONE: Record<
   },
 };
 
-const Chip: React.FC<{
+export const Chip: React.FC<{
   spec: ChipSpec;
   size?: number; // px
   className?: string;

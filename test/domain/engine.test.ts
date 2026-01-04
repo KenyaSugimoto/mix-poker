@@ -989,5 +989,84 @@ describe("applyEvent", () => {
       expect(state.currentBet).toBe(160);
       expect(state.raiseCount).toBe(1);
     });
+
+    it("RAISE時のcommittedThisStreetが正しく計算されること", () => {
+      // COMPLETE 40
+      let state = applyEvent(threePlayerState, {
+        id: "e1",
+        type: "COMPLETE",
+        seat: 0,
+        street: "3rd",
+        amount: 40,
+        timestamp: Date.now(),
+      });
+      expect(state.players[0].committedThisStreet).toBe(40);
+      expect(state.currentBet).toBe(40);
+
+      // RAISE（40の増分） → currentBet = 80
+      // プレイヤーは前のcurrentBet(40)にコール + 増分(40) = 80を払う必要がある
+      state = applyEvent(state, {
+        id: "e2",
+        type: "RAISE",
+        seat: 1,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 40, // streetBetUnit (smallBet)
+      });
+      expect(state.currentBet).toBe(80);
+      expect(state.players[1].committedThisStreet).toBe(80); // 前のcurrentBet(40) + 増分(40)
+      expect(state.players[1].stack).toBe(1000 - 80);
+    });
+
+    it("連続RAISE時のcommittedThisStreetが正しく計算されること", () => {
+      // COMPLETE 40
+      let state = applyEvent(threePlayerState, {
+        id: "e1",
+        type: "COMPLETE",
+        seat: 0,
+        street: "3rd",
+        amount: 40,
+        timestamp: Date.now(),
+      });
+      expect(state.players[0].committedThisStreet).toBe(40);
+
+      // 1st RAISE（40の増分） → currentBet = 80
+      state = applyEvent(state, {
+        id: "e2",
+        type: "RAISE",
+        seat: 1,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 40,
+      });
+      expect(state.currentBet).toBe(80);
+      expect(state.players[1].committedThisStreet).toBe(80);
+
+      // 2nd RAISE（40の増分） → currentBet = 120
+      // seat2は現在0を払っている状態から、120を払う必要がある
+      state = applyEvent(state, {
+        id: "e3",
+        type: "RAISE",
+        seat: 2,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 40,
+      });
+      expect(state.currentBet).toBe(120);
+      expect(state.players[2].committedThisStreet).toBe(120);
+      expect(state.players[2].stack).toBe(1000 - 120);
+
+      // seat0がCALL → currentBetの差額（120 - 40 = 80）を追加で払う
+      state = applyEvent(state, {
+        id: "e4",
+        type: "CALL",
+        seat: 0,
+        street: "3rd",
+        timestamp: Date.now(),
+        amount: 80,
+      });
+      expect(state.players[0].committedThisStreet).toBe(120); // 元の40 + 追加80
+      expect(state.players[0].stack).toBe(1000 - 120);
+    });
   });
 });

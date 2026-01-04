@@ -126,7 +126,17 @@ const handleBetting = (
   event: BetEvent | RaiseEvent | CompleteEvent | BringInEvent,
 ) => {
   const player = draft.players[event.seat];
-  const added = event.amount - player.committedThisStreet;
+
+  // RAISEの場合、event.amountは増分（streetBetUnit）
+  // プレイヤーは currentBet + event.amount まで出す必要がある
+  let targetAmount: number;
+  if (event.type === "RAISE") {
+    targetAmount = draft.currentBet + event.amount;
+  } else {
+    targetAmount = event.amount;
+  }
+
+  const added = targetAmount - player.committedThisStreet;
   const actualAdded = Math.min(player.stack, added);
 
   player.stack -= actualAdded;

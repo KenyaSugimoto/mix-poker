@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import {
   evaluateRazz,
   evaluateStud8,
@@ -10,6 +10,7 @@ import { getHandRankLabel, getLowHandLabel } from "../../utils/handRankLabel";
 import { getGameTypeLabel } from "../../utils/labelHelper";
 import { DealInfo } from "../play/DealInfo";
 import { ActionHistoryPanel } from "./ActionHistoryPanel";
+import { BetChips } from "./BetChips";
 import { PotStackBadge } from "./PotStackBadge";
 import { SeatPanel } from "./SeatPanel";
 
@@ -103,16 +104,40 @@ export const TableView: React.FC<TableViewProps> = ({
         players={game.players}
         dealIndex={dealIndex}
       />
-      {/* テーブル中央のポット表示 */}
-      <div className="absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
-        <PotStackBadge pot={deal.pot} ante={deal.ante} />
-        {/* ポット額（コンパクト） */}
-        <div className="mt-1">
-          <div className="text-sm font-bold tabular-nums text-white drop-shadow-md">
-            {deal.pot}
+      {/* テーブル中央のポット表示（ショーダウン時は非表示） */}
+      {!deal.dealFinished && (
+        <div className="absolute top-1/2 left-1/2 z-10 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
+          {/* Pot総額（上） */}
+          <div className="mb-1">
+            <div className="text-xs font-bold tabular-nums text-white drop-shadow-md">
+              Pot: {deal.pot}
+            </div>
           </div>
+
+          {/* 中央のチップの集合（前のストリートまでに確定したポット額） */}
+          {(() => {
+            // このストリートのベット総額を計算
+            const currentStreetBets = deal.players.reduce(
+              (sum, p) => sum + p.committedThisStreet,
+              0,
+            );
+            // 前のストリートまでに確定したポット額
+            const confirmedPot = deal.pot - currentStreetBets;
+
+            return (
+              <>
+                <PotStackBadge pot={confirmedPot} ante={deal.ante} />
+                {/* 中央のチップ総額（下、ラベルなし） */}
+                <div className="mt-1">
+                  <div className="text-sm font-bold tabular-nums text-white drop-shadow-md">
+                    {confirmedPot}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </div>
-      </div>
+      )}
 
       {/* ゲーム種目表示カード */}
       <div className="absolute top-[56%] left-[44%] -translate-x-1/2 -translate-y-1/2 z-10">
@@ -142,22 +167,50 @@ export const TableView: React.FC<TableViewProps> = ({
         const playerId = deal.seatOrder[index];
         const winningsAmount = dealSummary?.potShare[playerId] ?? null;
 
+        // プレイヤーの角度を計算（BetChipsで使用）
+        const isHero = player.kind === "human";
+        const heroSeatIndex = deal.players.findIndex((p) => p.kind === "human");
+        let angle: number;
+        if (isHero) {
+          angle = 90; // 6時の位置（90度 = 下方向）
+        } else {
+          // Heroを基準に相対的な位置を計算
+          const relativeIndex = index - heroSeatIndex;
+          angle = 90 + (relativeIndex * 360) / deal.playerCount;
+        }
+
         return (
-          <SeatPanel
-            key={player.seat}
-            player={player}
-            playerName={playerName}
-            isCurrentActor={isCurrentActor}
-            seatIndex={index}
-            totalSeats={deal.playerCount}
-            players={deal.players}
-            deal={deal}
-            isDealFinished={deal.dealFinished}
-            isWinner={isWinner}
-            winningsAmount={winningsAmount}
-            handRankLabel={handRankLabels[player.seat] ?? null}
-            lowRankLabel={lowRankLabels[player.seat] ?? null}
-          />
+          <React.Fragment key={player.seat}>
+            <SeatPanel
+              player={player}
+              playerName={playerName}
+              isCurrentActor={isCurrentActor}
+              seatIndex={index}
+              totalSeats={deal.playerCount}
+              players={deal.players}
+              deal={deal}
+              isDealFinished={deal.dealFinished}
+              isWinner={isWinner}
+              handRankLabel={handRankLabels[player.seat] ?? null}
+              lowRankLabel={lowRankLabels[player.seat] ?? null}
+            />
+            {/* ベットチップ表示（committedThisStreet > 0の場合のみ、ショーダウン時は非表示） */}
+            {!deal.dealFinished && player.committedThisStreet > 0 && (
+              <BetChips
+                amount={player.committedThisStreet}
+                ante={deal.ante}
+                seatAngle={angle}
+              />
+            )}
+            {/* ショーダウン時：獲得したチップの集合を表示 */}
+            {deal.dealFinished && winningsAmount && winningsAmount > 0 && (
+              <BetChips
+                amount={winningsAmount}
+                ante={deal.ante}
+                seatAngle={angle}
+              />
+            )}
+          </React.Fragment>
         );
       })}
     </div>

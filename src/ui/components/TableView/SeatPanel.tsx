@@ -13,7 +13,6 @@ interface SeatPanelProps {
   deal: DealState; // カード情報を取得するために必要
   isDealFinished: boolean; // ディールが終了しているかどうか
   isWinner?: boolean; // 勝者かどうか
-  winningsAmount?: number | null; // 獲得額（正の値のみ）
   handRankLabel?: string | null; // High役の日本語ラベル
   lowRankLabel?: string | null; // Low役のラベル
 }
@@ -28,7 +27,6 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
   deal,
   isDealFinished,
   isWinner = false,
-  winningsAmount = null,
   handRankLabel = null,
   lowRankLabel = null,
 }) => {
@@ -110,13 +108,6 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
           {!player.active && (
             <div className="text-xs text-destructive font-semibold">FOLD</div>
           )}
-          {winningsAmount !== null &&
-            winningsAmount !== undefined &&
-            winningsAmount > 0 && (
-              <div className="text-sm font-bold text-poker-gold">
-                +{winningsAmount}
-              </div>
-            )}
           <div className="pt-2 border-t space-y-1">
             <div className="flex justify-between text-xs">
               <span className="font-semibold">{player.stack}</span>
