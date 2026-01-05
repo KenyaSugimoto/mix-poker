@@ -18,6 +18,11 @@ interface BetChipsProps {
   ante: number; // 最小単位
   seatAngle: number; // プレイヤーの角度（0-360度）
   className?: string;
+  handRankLabel?: string | null; // High役のラベル（ショーダウン時のみ）
+  lowRankLabel?: string | null; // Low役のラベル（ショーダウン時のみ）
+  isWinnerHigh?: boolean; // High役でポットを取得したかどうか
+  isWinnerLow?: boolean; // Low役でポットを取得したかどうか
+  gameType?: "studHi" | "razz" | "stud8"; // ゲームの種類
 }
 
 export const BetChips: React.FC<BetChipsProps> = ({
@@ -25,6 +30,11 @@ export const BetChips: React.FC<BetChipsProps> = ({
   ante,
   seatAngle,
   className,
+  handRankLabel = null,
+  lowRankLabel = null,
+  isWinnerHigh = false,
+  isWinnerLow = false,
+  gameType,
 }) => {
   const chipStacks = calculateChips(amount, ante);
 
@@ -41,7 +51,7 @@ export const BetChips: React.FC<BetChipsProps> = ({
   return (
     <div
       className={[
-        "absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center",
+        "absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-20",
         className ?? "",
       ].join(" ")}
       style={{
@@ -49,6 +59,39 @@ export const BetChips: React.FC<BetChipsProps> = ({
         top: `calc(50% + ${y}px)`,
       }}
     >
+      {/* 役情報（ショーダウン時のみ） */}
+      {(handRankLabel || lowRankLabel) && (
+        <div className="relative z-20 mb-1 bg-black/80 backdrop-blur-sm rounded px-2 py-1 shadow-md space-y-0.5">
+          {handRankLabel && (
+            <div
+              className={`text-[10px] font-semibold ${
+                isWinnerHigh ? "text-poker-gold" : "text-gray-400"
+              }`}
+            >
+              High: {handRankLabel}
+            </div>
+          )}
+          {lowRankLabel && (
+            <div
+              className={`text-[10px] font-semibold ${
+                lowRankLabel === "ローなし"
+                  ? "text-gray-400"
+                  : // Razzの場合はwinnersHighに勝者が入っているため、isWinnerHighを使用
+                    gameType === "razz"
+                    ? isWinnerHigh
+                      ? "text-poker-gold"
+                      : "text-gray-400"
+                    : isWinnerLow
+                      ? "text-poker-gold"
+                      : "text-gray-400"
+              }`}
+            >
+              Low: {lowRankLabel}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* チップスタックの表示 */}
       <div
         className="relative mx-auto"
