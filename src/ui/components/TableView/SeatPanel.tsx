@@ -1,3 +1,4 @@
+import { Cpu, User } from "lucide-react";
 import type React from "react";
 import type { DealState, PlayerState } from "../../../domain/types";
 import { getActionLabel, getLastAction } from "../../utils/actionLabel";
@@ -12,7 +13,8 @@ interface SeatPanelProps {
   players: PlayerState[]; // Heroの位置を計算するために必要
   deal: DealState; // カード情報を取得するために必要
   isDealFinished: boolean; // ディールが終了しているかどうか
-  isWinner?: boolean; // 勝者かどうか
+  isWinnerHigh?: boolean; // High役でポットを取得したかどうか
+  isWinnerLow?: boolean; // Low役でポットを取得したかどうか
   handRankLabel?: string | null; // High役の日本語ラベル
   lowRankLabel?: string | null; // Low役のラベル
 }
@@ -26,7 +28,8 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
   players,
   deal,
   isDealFinished,
-  isWinner = false,
+  isWinnerHigh = false,
+  isWinnerLow = false,
   handRankLabel = null,
   lowRankLabel = null,
 }) => {
@@ -63,7 +66,7 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
         top: `calc(50% + ${y}px)`,
       }}
     >
-      <div className="mb-2">
+      <div>
         <PlayerCards
           hand={deal.hands[player.seat] ?? { downCards: [], upCards: [] }}
           playerKind={player.kind}
@@ -72,50 +75,66 @@ export const SeatPanel: React.FC<SeatPanelProps> = ({
         />
       </div>
       <div
-        className={`relative bg-card rounded-xl p-4 shadow-sm border min-w-[160px] transition-all ${
-          isWinner ? "border-2 border-poker-gold" : ""
+        className={`relative bg-card rounded-xl p-3 shadow-sm border min-w-[160px] transition-all -mt-7 z-10 ${
+          isWinnerHigh || isWinnerLow ? "border-2 border-poker-gold" : ""
         } ${!player.active ? "opacity-50" : ""}`}
       >
         {isCurrentActor && !isDealFinished && (
           <div className="absolute inset-0 rounded-xl ring-2 ring-poker-gold ring-offset-2 ring-offset-background animate-pulse pointer-events-none z-10" />
         )}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="font-semibold text-sm">
-              {playerName}{" "}
-              <span className="text-xs text-muted-foreground font-normal">
-                ({player.kind === "human" ? "You" : "CPU"})
-              </span>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 font-semibold text-sm">
+              {playerName}
+              {player.kind === "human" ? (
+                <User className="w-3 h-3 text-muted-foreground" />
+              ) : (
+                <Cpu className="w-3 h-3 text-muted-foreground" />
+              )}
             </div>
-            {isWinner && (
-              <div className="text-xs font-bold text-poker-gold">WINNER</div>
+            {/* 直近のアクション（プレイヤー名の右隣に表示） */}
+            {lastAction && (
+              <span className="text-[10px] font-semibold text-primary">
+                {getActionLabel(lastAction)}
+              </span>
             )}
           </div>
-          {isDealFinished && player.active && handRankLabel && (
-            <div className="text-xs font-semibold text-blue-400">
-              High: {handRankLabel}
-            </div>
-          )}
-          {isDealFinished && player.active && lowRankLabel && (
-            <div
-              className={`text-xs font-semibold ${
-                lowRankLabel === "ローなし" ? "text-gray-400" : "text-green-400"
-              }`}
-            >
-              Low: {lowRankLabel}
-            </div>
-          )}
           {!player.active && (
             <div className="text-xs text-destructive font-semibold">FOLD</div>
           )}
-          <div className="pt-2 border-t space-y-1">
-            <div className="flex justify-between text-xs">
+          <div className="pt-1 border-t space-y-1">
+            <div className="flex justify-between items-center text-xs">
               <span className="font-semibold">{player.stack}</span>
-              {lastAction && (
-                <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-primary">
-                    {getActionLabel(lastAction)}
-                  </span>
+              {/* 役の情報（ショーダウン時のみ、スタックの右側に表示） */}
+              {isDealFinished && player.active && (
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold">
+                  {handRankLabel && (
+                    <span
+                      className={
+                        isWinnerHigh ? "text-poker-gold" : "text-gray-400"
+                      }
+                    >
+                      H: {handRankLabel}
+                    </span>
+                  )}
+                  {lowRankLabel && (
+                    <span
+                      className={
+                        lowRankLabel === "ローなし"
+                          ? "text-gray-400"
+                          : // Razzの場合はwinnersHighに勝者が入っているため、isWinnerHighを使用
+                            deal.gameType === "razz"
+                            ? isWinnerHigh
+                              ? "text-poker-gold"
+                              : "text-gray-400"
+                            : isWinnerLow
+                              ? "text-poker-gold"
+                              : "text-gray-400"
+                      }
+                    >
+                      L: {lowRankLabel}
+                    </span>
+                  )}
                 </div>
               )}
             </div>

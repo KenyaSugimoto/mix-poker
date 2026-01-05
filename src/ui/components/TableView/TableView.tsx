@@ -64,20 +64,21 @@ export const TableView: React.FC<TableViewProps> = ({
     }
   }
 
-  // 勝者情報をseatIndexベースに変換
-  const winnerSeats = new Set<number>();
+  // 勝者情報をseatIndexベースに変換（High/Low別々に管理）
+  const winnersHighSeats = new Set<number>();
+  const winnersLowSeats = new Set<number>();
   if (dealSummary) {
     // PlayerIdからseatIndexに変換
     dealSummary.winnersHigh.forEach((playerId) => {
       const seatIndex = deal.seatOrder.indexOf(playerId);
       if (seatIndex >= 0) {
-        winnerSeats.add(seatIndex);
+        winnersHighSeats.add(seatIndex);
       }
     });
     dealSummary.winnersLow?.forEach((playerId) => {
       const seatIndex = deal.seatOrder.indexOf(playerId);
       if (seatIndex >= 0) {
-        winnerSeats.add(seatIndex);
+        winnersLowSeats.add(seatIndex);
       }
     });
   }
@@ -161,7 +162,8 @@ export const TableView: React.FC<TableViewProps> = ({
         const playerName =
           gamePlayer?.name ?? UI_STRINGS.COMMON.PLAYER_DEFAULT(index + 1);
         const isCurrentActor = deal.currentActorIndex === index;
-        const isWinner = winnerSeats.has(index);
+        const isWinnerHigh = winnersHighSeats.has(index);
+        const isWinnerLow = winnersLowSeats.has(index);
 
         // 獲得額を取得（potShareから）
         const playerId = deal.seatOrder[index];
@@ -190,7 +192,8 @@ export const TableView: React.FC<TableViewProps> = ({
               players={deal.players}
               deal={deal}
               isDealFinished={deal.dealFinished}
-              isWinner={isWinner}
+              isWinnerHigh={isWinnerHigh}
+              isWinnerLow={isWinnerLow}
               handRankLabel={handRankLabels[player.seat] ?? null}
               lowRankLabel={lowRankLabels[player.seat] ?? null}
             />
@@ -208,6 +211,11 @@ export const TableView: React.FC<TableViewProps> = ({
                 amount={winningsAmount}
                 ante={deal.ante}
                 seatAngle={angle}
+                handRankLabel={handRankLabels[player.seat] ?? null}
+                lowRankLabel={lowRankLabels[player.seat] ?? null}
+                isWinnerHigh={isWinnerHigh}
+                isWinnerLow={isWinnerLow}
+                gameType={deal.gameType}
               />
             )}
           </React.Fragment>
