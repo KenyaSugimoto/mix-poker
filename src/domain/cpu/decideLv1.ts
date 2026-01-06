@@ -1,4 +1,5 @@
 import { decideRazzLv1 } from "./decideRazzLv1";
+import { decideStud8Lv1 } from "./decideStud8Lv1";
 import { buildObservation } from "./observation";
 import {
   type CpuParamsLv1,
@@ -141,6 +142,11 @@ export const decideLv1 = (
   // Razz専用戦略を使用
   if (obs.gameType === "razz") {
     return decideRazzLv1(ctx);
+  }
+
+  // Stud8専用戦略を使用
+  if (obs.gameType === "stud8") {
+    return decideStud8Lv1(ctx, rng);
   }
 
   // 3. ハンドスコアを計算
