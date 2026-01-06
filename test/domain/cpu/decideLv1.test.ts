@@ -713,4 +713,563 @@ describe("decideLv1", () => {
       expect(action).toBe("RAISE");
     });
   });
+
+  // === Razz 専用戦略テスト ===
+  describe("Razz Lv1 戦略", () => {
+    const createRazzState = (
+      overrides: Partial<DealState> = {},
+    ): DealState => ({
+      dealId: "razz-test",
+      gameType: "razz",
+      playerCount: 2,
+      players: [
+        {
+          seat: 0,
+          kind: "human",
+          active: true,
+          stack: 900,
+          committedTotal: 30,
+          committedThisStreet: 20,
+        },
+        {
+          seat: 1,
+          kind: "cpu",
+          active: true,
+          stack: 990,
+          committedTotal: 10,
+          committedThisStreet: 0,
+        },
+      ],
+      seatOrder: ["player1", "player2"],
+      ante: 10,
+      bringIn: 20,
+      smallBet: 40,
+      bigBet: 80,
+      street: "3rd",
+      bringInIndex: 0,
+      currentActorIndex: 1,
+      pot: 40,
+      currentBet: 20,
+      raiseCount: 0,
+      pendingResponseCount: 1,
+      checksThisStreet: 0,
+      actionsThisStreet: [],
+      dealFinished: false,
+      deck: [],
+      rngSeed: "",
+      hands: {
+        0: {
+          downCards: [
+            { rank: "K", suit: "c" } as Card,
+            { rank: "Q", suit: "c" } as Card,
+          ],
+          upCards: [{ rank: "J", suit: "h" } as Card],
+        },
+        1: {
+          downCards: [
+            { rank: "A", suit: "h" } as Card,
+            { rank: "2", suit: "c" } as Card,
+          ],
+          upCards: [{ rank: "3", suit: "s" } as Card],
+        },
+      },
+      eventLog: [],
+      ...overrides,
+    });
+
+    describe("3rd Street", () => {
+      it("ブリングインプレイヤーは無条件でBRING_INを選択すること", () => {
+        const state = createRazzState({
+          bringInIndex: 1,
+          currentActorIndex: 1,
+          currentBet: 0,
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["BRING_IN", "COMPLETE"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("BRING_IN");
+      });
+
+      it("ブリングインプレイヤーがCOMP後に8以下3枚の場合はRAISEすること", () => {
+        const state = createRazzState({
+          bringInIndex: 1,
+          currentActorIndex: 1,
+          currentBet: 40, // 相手がCOMPLETEした後
+          hands: {
+            0: {
+              downCards: [
+                { rank: "K", suit: "c" } as Card,
+                { rank: "Q", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "J", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "s" } as Card], // 全て8以下
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "RAISE", "FOLD"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("RAISE");
+      });
+
+      it("ブリングインプレイヤーがCOMP後に8以下3枚でない場合はCALLすること", () => {
+        const state = createRazzState({
+          bringInIndex: 1,
+          currentActorIndex: 1,
+          currentBet: 40,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "K", suit: "h" } as Card, // 9以上のカードあり
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "s" } as Card],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "RAISE", "FOLD"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("CALL");
+      });
+
+      it("非ブリングインでCOMPなし＋後ろ全員より強い場合はCOMPLETEすること", () => {
+        const state = createRazzState({
+          bringInIndex: 0,
+          currentActorIndex: 1,
+          currentBet: 20, // bringInのまま
+          hands: {
+            0: {
+              downCards: [
+                { rank: "K", suit: "c" } as Card,
+                { rank: "Q", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "J", suit: "h" } as Card], // 弱い（Jが最弱）
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "s" } as Card], // 強い（3が最弱）
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["FOLD", "CALL", "COMPLETE"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("COMPLETE");
+      });
+
+      it("非ブリングインでCOMPなし＋後ろより弱い場合はFOLDすること", () => {
+        const state = createRazzState({
+          bringInIndex: 0,
+          currentActorIndex: 1,
+          currentBet: 20, // bringInのまま
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "h" } as Card], // 強い
+            },
+            1: {
+              downCards: [
+                { rank: "K", suit: "h" } as Card,
+                { rank: "Q", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "T", suit: "s" } as Card], // 弱い（Tが最弱）
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["FOLD", "CALL", "COMPLETE"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("FOLD");
+      });
+
+      it("非ブリングインでCOMPあり＋8以下3枚の場合はRAISEすること", () => {
+        const state = createRazzState({
+          bringInIndex: 0,
+          currentActorIndex: 1,
+          currentBet: 40, // COMPLETEが入っている
+          hands: {
+            0: {
+              downCards: [
+                { rank: "K", suit: "c" } as Card,
+                { rank: "Q", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "J", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "5", suit: "s" } as Card], // 全て8以下
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["FOLD", "CALL", "RAISE"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("RAISE");
+      });
+
+      it("非ブリングインでCOMPあり＋8以下3枚でない場合はFOLDすること", () => {
+        const state = createRazzState({
+          bringInIndex: 0,
+          currentActorIndex: 1,
+          currentBet: 40, // COMPLETEが入っている
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "K", suit: "h" } as Card, // 9以上のカードあり
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "5", suit: "s" } as Card],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["FOLD", "CALL", "RAISE"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("FOLD");
+      });
+    });
+
+    describe("4th Street", () => {
+      it("相手にペアがある場合はBETすること", () => {
+        const state = createRazzState({
+          street: "4th",
+          currentBet: 0,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [
+                { rank: "3", suit: "h" } as Card,
+                { rank: "3", suit: "d" } as Card, // ペア
+              ],
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "2", suit: "d" } as Card,
+              ],
+              upCards: [
+                { rank: "4", suit: "s" } as Card,
+                { rank: "5", suit: "c" } as Card, // ノーペア
+              ],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CHECK", "BET"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("BET");
+      });
+
+      it("両者ノーペアで最弱札比較で勝っている場合はBETすること", () => {
+        const state = createRazzState({
+          street: "4th",
+          currentBet: 0,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [
+                { rank: "K", suit: "h" } as Card, // 最弱がK
+                { rank: "5", suit: "d" } as Card,
+              ],
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "2", suit: "d" } as Card,
+              ],
+              upCards: [
+                { rank: "4", suit: "s" } as Card,
+                { rank: "5", suit: "c" } as Card, // 最弱が5
+              ],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CHECK", "BET"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("BET");
+      });
+
+      it("自分がペアの場合はCHECKすること", () => {
+        const state = createRazzState({
+          street: "4th",
+          currentBet: 0,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [
+                { rank: "K", suit: "h" } as Card,
+                { rank: "5", suit: "d" } as Card,
+              ],
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "A", suit: "d" } as Card, // ペア
+              ],
+              upCards: [
+                { rank: "4", suit: "s" } as Card,
+                { rank: "5", suit: "c" } as Card,
+              ],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CHECK", "BET"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("CHECK");
+      });
+
+      it("BETを受けて自分ノーペアの場合は無条件CALLすること", () => {
+        const state = createRazzState({
+          street: "4th",
+          currentBet: 40,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [
+                { rank: "3", suit: "h" } as Card,
+                { rank: "4", suit: "d" } as Card,
+              ],
+            },
+            1: {
+              downCards: [
+                { rank: "K", suit: "h" } as Card,
+                { rank: "Q", suit: "d" } as Card, // 弱いがノーペア
+              ],
+              upCards: [
+                { rank: "T", suit: "s" } as Card,
+                { rank: "9", suit: "c" } as Card,
+              ],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "RAISE", "FOLD"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("CALL");
+      });
+    });
+
+    describe("5th Street 以降", () => {
+      it("自分がペアでBETを受けた場合はFOLDすること", () => {
+        const state = createRazzState({
+          street: "5th",
+          currentBet: 80,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [
+                { rank: "3", suit: "h" } as Card,
+                { rank: "4", suit: "d" } as Card,
+                { rank: "5", suit: "s" } as Card,
+              ],
+            },
+            1: {
+              downCards: [
+                { rank: "7", suit: "h" } as Card,
+                { rank: "7", suit: "d" } as Card, // ペア
+              ],
+              upCards: [
+                { rank: "4", suit: "s" } as Card,
+                { rank: "5", suit: "c" } as Card,
+                { rank: "6", suit: "h" } as Card,
+              ],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "RAISE", "FOLD"],
+        };
+
+        const action = decideLv1(ctx);
+        expect(action).toBe("FOLD");
+      });
+
+      it("2番目に弱い札が相手の最弱より弱い場合はFOLDすること", () => {
+        const state = createRazzState({
+          street: "5th",
+          currentBet: 80,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [
+                { rank: "3", suit: "h" } as Card, // 最弱が3
+                { rank: "4", suit: "d" } as Card,
+                { rank: "5", suit: "s" } as Card,
+              ],
+            },
+            1: {
+              downCards: [
+                { rank: "K", suit: "h" } as Card, // 最弱K、2番目弱いのはQ
+                { rank: "Q", suit: "d" } as Card,
+              ],
+              upCards: [
+                { rank: "4", suit: "s" } as Card,
+                { rank: "5", suit: "c" } as Card,
+                { rank: "6", suit: "h" } as Card,
+              ],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "RAISE", "FOLD"],
+        };
+
+        const action = decideLv1(ctx);
+        // 2番目弱い(Q=12) > 相手最弱(3) → FOLD
+        expect(action).toBe("FOLD");
+      });
+
+      it("2番目に弱い札が相手の最弱以下の場合はCALLすること", () => {
+        const state = createRazzState({
+          street: "5th",
+          currentBet: 80,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [
+                { rank: "8", suit: "h" } as Card, // 最弱が8
+                { rank: "7", suit: "d" } as Card,
+                { rank: "6", suit: "s" } as Card,
+              ],
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "2", suit: "d" } as Card,
+              ],
+              upCards: [
+                { rank: "3", suit: "s" } as Card,
+                { rank: "4", suit: "c" } as Card,
+                { rank: "7", suit: "h" } as Card, // 最弱7、2番目弱い4
+              ],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "RAISE", "FOLD"],
+        };
+
+        const action = decideLv1(ctx);
+        // 2番目弱い(7) <= 相手最弱(8) → CALL
+        expect(action).toBe("CALL");
+      });
+    });
+  });
 });
