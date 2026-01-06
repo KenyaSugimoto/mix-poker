@@ -1,3 +1,4 @@
+import { decideRazzLv1 } from "./decideRazzLv1";
 import { buildObservation } from "./observation";
 import {
   type CpuParamsLv1,
@@ -136,6 +137,11 @@ export const decideLv1 = (
 
   // 2. Observation を生成
   const obs = buildObservation(ctx.state, ctx.seat);
+
+  // Razz専用戦略を使用
+  if (obs.gameType === "razz") {
+    return decideRazzLv1(ctx);
+  }
 
   // 3. ハンドスコアを計算
   const handScore = calcHandScore(obs);
