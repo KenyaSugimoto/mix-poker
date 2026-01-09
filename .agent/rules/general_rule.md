@@ -20,3 +20,4 @@ description: Use existing rules for this project
 ## ルールの適用
 
 `general.md` を読み込んだ後、その指示に従って、タスクの内容に応じた追加のルールファイル（例：`implementation.md`, `requirements.md` など）を自律的に読み込んで適用してください。
+タスクを進める上で不明点がや曖昧な点があれば必ずユーザに確認してください。
