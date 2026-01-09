@@ -89,7 +89,6 @@ export const classify3rdStud8 = (meCards3: Card[]): Quality3rdStud8 => {
   const hasAce = vals.includes(1);
   const maxVal = Math.max(...vals);
 
-
   // Scoop3_Monster: HiもLoも両睨み
   // - A2x（x<=8）かつ3枚すべて別ランク
   // - A3x（x<=8）かつ3枚別ランク
