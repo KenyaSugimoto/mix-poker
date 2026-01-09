@@ -1,5 +1,6 @@
 import type { DealState, EventType, SeatIndex } from "../types";
 import { decideLv1 } from "./decideLv1";
+import { decideLv2 } from "./decideLv2";
 
 /**
  * CPUが選択可能なアクションタイプ（STREET_ADVANCE/DEAL_ENDは含まない）
@@ -51,5 +52,15 @@ export const cpuLv0: CpuStrategy = {
 export const cpuLv1: CpuStrategy = {
   decide(ctx) {
     return decideLv1(ctx);
+  },
+};
+
+/**
+ * Lv2 CPU戦略
+ * ルールベースでより強い意思決定を行う
+ */
+export const cpuLv2: CpuStrategy = {
+  decide(ctx) {
+    return decideLv2(ctx);
   },
 };
