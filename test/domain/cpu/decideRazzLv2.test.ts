@@ -67,6 +67,10 @@ describe("decideRazzLv2", () => {
     ...overrides,
   });
 
+  // ============================================================
+  // 合法性テスト
+  // ============================================================
+
   describe("合法性テスト", () => {
     it("返すアクションがallowedActionsに含まれていること", () => {
       const state = createTestState();
@@ -79,25 +83,324 @@ describe("decideRazzLv2", () => {
       const action = decideRazzLv2(ctx);
       expect(["CALL", "COMPLETE", "FOLD"]).toContain(action);
     });
+
+    it("allowedActionsが1つの場合、そのアクションを返すこと", () => {
+      const state = createTestState();
+      const ctx: CpuDecisionContext = {
+        state,
+        seat: 1,
+        allowedActions: ["CALL"],
+      };
+
+      const action = decideRazzLv2(ctx);
+      expect(action).toBe("CALL");
+    });
+
+    it("allowedActionsが空の場合、FOLDを返すこと", () => {
+      const state = createTestState();
+      const ctx: CpuDecisionContext = {
+        state,
+        seat: 1,
+        allowedActions: [],
+      };
+
+      const action = decideRazzLv2(ctx);
+      expect(action).toBe("FOLD");
+    });
   });
 
+  // ============================================================
+  // 3rd Street テスト
+  // ============================================================
+
   describe("3rd Street", () => {
-    it("Monster3（A23）でCOMPLETEを選択すること", () => {
+    describe("Bring-in判定", () => {
+      it("Bring-in担当でMonster3 → COMPLETE", () => {
+        const state = createTestState({
+          bringInIndex: 1,
+          currentActorIndex: 1,
+          currentBet: 0,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "T", suit: "c" } as Card,
+                { rank: "J", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "K", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "s" } as Card],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["BRING_IN", "COMPLETE"],
+        };
+
+        const action = decideRazzLv2(ctx);
+        expect(action).toBe("COMPLETE");
+      });
+
+      it("Bring-in担当でGood3 → COMPLETE", () => {
+        const state = createTestState({
+          bringInIndex: 1,
+          currentActorIndex: 1,
+          currentBet: 0,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "T", suit: "c" } as Card,
+                { rank: "J", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "K", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "6", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "7", suit: "s" } as Card],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["BRING_IN", "COMPLETE"],
+        };
+
+        const action = decideRazzLv2(ctx);
+        expect(action).toBe("COMPLETE");
+      });
+
+      it("Bring-in担当でBad3 → BRING_IN", () => {
+        const state = createTestState({
+          bringInIndex: 1,
+          currentActorIndex: 1,
+          currentBet: 0,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "J", suit: "h" } as Card,
+                { rank: "Q", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "K", suit: "s" } as Card],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["BRING_IN", "COMPLETE"],
+        };
+
+        const action = decideRazzLv2(ctx);
+        expect(action).toBe("BRING_IN");
+      });
+    });
+
+    describe("通常オープン", () => {
+      it("Monster3（A23）でCOMPLETEを選択すること", () => {
+        const state = createTestState({
+          hands: {
+            0: {
+              downCards: [
+                { rank: "T", suit: "c" } as Card,
+                { rank: "J", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "K", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "s" } as Card],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "COMPLETE", "FOLD"],
+        };
+
+        const action = decideRazzLv2(ctx);
+        expect(action).toBe("COMPLETE");
+      });
+
+      it("Door>=9で全員高ドア → COMPLETE（スチール）", () => {
+        const state = createTestState({
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "K", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "T", suit: "h" } as Card,
+                { rank: "J", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "Q", suit: "s" } as Card],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "COMPLETE", "FOLD"],
+        };
+
+        const action = decideRazzLv2(ctx);
+        expect(action).toBe("COMPLETE");
+      });
+
+      it("Door>=9で後ろに低ドアあり → FOLD", () => {
+        const state = createTestState({
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "T", suit: "h" } as Card,
+                { rank: "J", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "Q", suit: "s" } as Card],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "COMPLETE", "FOLD"],
+        };
+
+        const action = decideRazzLv2(ctx);
+        expect(["FOLD", "CALL"]).toContain(action);
+      });
+    });
+
+    describe("相手COMPLETEに直面", () => {
+      it("Monster3で相手ドアが高い → RAISE", () => {
+        const state = createTestState({
+          currentBet: 40,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "T", suit: "c" } as Card,
+                { rank: "J", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "K", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "A", suit: "h" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "s" } as Card],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "RAISE", "FOLD"],
+        };
+
+        const action = decideRazzLv2(ctx);
+        expect(["RAISE", "CALL"]).toContain(action);
+      });
+
+      it("Bad3で相手ドアが低い（TightLikely）→ FOLD", () => {
+        const state = createTestState({
+          currentBet: 40,
+          hands: {
+            0: {
+              downCards: [
+                { rank: "A", suit: "c" } as Card,
+                { rank: "2", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "3", suit: "h" } as Card],
+            },
+            1: {
+              downCards: [
+                { rank: "T", suit: "h" } as Card,
+                { rank: "J", suit: "c" } as Card,
+              ],
+              upCards: [{ rank: "K", suit: "s" } as Card],
+            },
+          },
+        });
+
+        const ctx: CpuDecisionContext = {
+          state,
+          seat: 1,
+          allowedActions: ["CALL", "RAISE", "FOLD"],
+        };
+
+        const action = decideRazzLv2(ctx);
+        expect(action).toBe("FOLD");
+      });
+    });
+  });
+
+  // ============================================================
+  // 4th Street テスト
+  // ============================================================
+
+  describe("4th Street", () => {
+    it("良いボードでBET", () => {
       const state = createTestState({
+        street: "4th",
+        currentBet: 0,
         hands: {
           0: {
             downCards: [
               { rank: "T", suit: "c" } as Card,
               { rank: "J", suit: "c" } as Card,
             ],
-            upCards: [{ rank: "K", suit: "h" } as Card],
+            upCards: [
+              { rank: "K", suit: "h" } as Card,
+              { rank: "Q", suit: "d" } as Card,
+            ],
           },
           1: {
             downCards: [
               { rank: "A", suit: "h" } as Card,
               { rank: "2", suit: "c" } as Card,
             ],
-            upCards: [{ rank: "3", suit: "s" } as Card],
+            upCards: [
+              { rank: "3", suit: "s" } as Card,
+              { rank: "4", suit: "d" } as Card,
+            ],
           },
         },
       });
@@ -105,29 +408,37 @@ describe("decideRazzLv2", () => {
       const ctx: CpuDecisionContext = {
         state,
         seat: 1,
-        allowedActions: ["CALL", "COMPLETE", "FOLD"],
+        allowedActions: ["CHECK", "BET"],
       };
 
       const action = decideRazzLv2(ctx);
-      expect(action).toBe("COMPLETE");
+      expect(action).toBe("BET");
     });
 
-    it("Door>=9で全員高ドア → COMPLETE（スチール）", () => {
+    it("相手BETに対して原則CALL", () => {
       const state = createTestState({
+        street: "4th",
+        currentBet: 40,
         hands: {
           0: {
             downCards: [
               { rank: "A", suit: "c" } as Card,
               { rank: "2", suit: "c" } as Card,
             ],
-            upCards: [{ rank: "K", suit: "h" } as Card], // 相手もKドア
+            upCards: [
+              { rank: "3", suit: "h" } as Card,
+              { rank: "4", suit: "d" } as Card,
+            ],
           },
           1: {
             downCards: [
-              { rank: "T", suit: "h" } as Card,
-              { rank: "J", suit: "c" } as Card,
+              { rank: "A", suit: "h" } as Card,
+              { rank: "5", suit: "c" } as Card,
             ],
-            upCards: [{ rank: "Q", suit: "s" } as Card], // 自分Qドア
+            upCards: [
+              { rank: "6", suit: "s" } as Card,
+              { rank: "7", suit: "d" } as Card,
+            ],
           },
         },
       });
@@ -135,30 +446,85 @@ describe("decideRazzLv2", () => {
       const ctx: CpuDecisionContext = {
         state,
         seat: 1,
-        allowedActions: ["CALL", "COMPLETE", "FOLD"],
+        allowedActions: ["CALL", "RAISE", "FOLD"],
       };
 
       const action = decideRazzLv2(ctx);
-      // 自分Q、相手K → 自分の方が良い（低い）
-      expect(action).toBe("COMPLETE");
+      expect(action).toBe("CALL");
+    });
+  });
+
+  // ============================================================
+  // 5th/6th Street テスト
+  // ============================================================
+
+  describe("5th/6th Street", () => {
+    it("5th: 良いボードでBET", () => {
+      const state = createTestState({
+        street: "5th",
+        currentBet: 0,
+        hands: {
+          0: {
+            downCards: [
+              { rank: "T", suit: "c" } as Card,
+              { rank: "J", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "K", suit: "h" } as Card,
+              { rank: "Q", suit: "d" } as Card,
+              { rank: "9", suit: "s" } as Card,
+            ],
+          },
+          1: {
+            downCards: [
+              { rank: "A", suit: "h" } as Card,
+              { rank: "2", suit: "c" } as Card,
+            ],
+            upCards: [
+              { rank: "3", suit: "s" } as Card,
+              { rank: "4", suit: "d" } as Card,
+              { rank: "5", suit: "h" } as Card,
+            ],
+          },
+        },
+      });
+
+      const ctx: CpuDecisionContext = {
+        state,
+        seat: 1,
+        allowedActions: ["CHECK", "BET"],
+      };
+
+      const action = decideRazzLv2(ctx);
+      expect(action).toBe("BET");
     });
 
-    it("Door>=9で後ろに低ドアあり → FOLD", () => {
+    it("5th: ブリック連発＋相手良ボード → FOLD", () => {
       const state = createTestState({
+        street: "5th",
+        currentBet: 80,
         hands: {
           0: {
             downCards: [
               { rank: "A", suit: "c" } as Card,
               { rank: "2", suit: "c" } as Card,
             ],
-            upCards: [{ rank: "3", suit: "h" } as Card], // 相手3ドア（良い）
+            upCards: [
+              { rank: "3", suit: "h" } as Card,
+              { rank: "4", suit: "d" } as Card,
+              { rank: "5", suit: "s" } as Card,
+            ],
           },
           1: {
             downCards: [
-              { rank: "T", suit: "h" } as Card,
-              { rank: "J", suit: "c" } as Card,
+              { rank: "A", suit: "h" } as Card,
+              { rank: "2", suit: "s" } as Card,
             ],
-            upCards: [{ rank: "Q", suit: "s" } as Card], // 自分Qドア（悪い）
+            upCards: [
+              { rank: "K", suit: "s" } as Card,
+              { rank: "Q", suit: "d" } as Card,
+              { rank: "J", suit: "h" } as Card,
+            ],
           },
         },
       });
@@ -166,32 +532,41 @@ describe("decideRazzLv2", () => {
       const ctx: CpuDecisionContext = {
         state,
         seat: 1,
-        allowedActions: ["CALL", "COMPLETE", "FOLD"],
+        allowedActions: ["CALL", "RAISE", "FOLD"],
       };
 
       const action = decideRazzLv2(ctx);
       expect(["FOLD", "CALL"]).toContain(action);
     });
 
-    it("Bring-in担当でBad3 → BRING_IN", () => {
+    it("6th: 良いボードでCALL", () => {
       const state = createTestState({
-        bringInIndex: 1,
-        currentActorIndex: 1,
-        currentBet: 0,
+        street: "6th",
+        currentBet: 80,
         hands: {
           0: {
             downCards: [
               { rank: "A", suit: "c" } as Card,
               { rank: "2", suit: "c" } as Card,
             ],
-            upCards: [{ rank: "3", suit: "h" } as Card],
+            upCards: [
+              { rank: "3", suit: "h" } as Card,
+              { rank: "K", suit: "d" } as Card,
+              { rank: "Q", suit: "s" } as Card,
+              { rank: "J", suit: "c" } as Card,
+            ],
           },
           1: {
             downCards: [
-              { rank: "J", suit: "h" } as Card,
-              { rank: "Q", suit: "c" } as Card,
+              { rank: "A", suit: "h" } as Card,
+              { rank: "2", suit: "s" } as Card,
             ],
-            upCards: [{ rank: "K", suit: "s" } as Card],
+            upCards: [
+              { rank: "3", suit: "s" } as Card,
+              { rank: "4", suit: "d" } as Card,
+              { rank: "5", suit: "h" } as Card,
+              { rank: "6", suit: "c" } as Card,
+            ],
           },
         },
       });
@@ -199,13 +574,17 @@ describe("decideRazzLv2", () => {
       const ctx: CpuDecisionContext = {
         state,
         seat: 1,
-        allowedActions: ["BRING_IN", "COMPLETE"],
+        allowedActions: ["CALL", "RAISE", "FOLD"],
       };
 
       const action = decideRazzLv2(ctx);
-      expect(action).toBe("BRING_IN");
+      expect(action).toBe("CALL");
     });
   });
+
+  // ============================================================
+  // 7th Street テスト（オーバーフォールド回避）
+  // ============================================================
 
   describe("7th Street オーバーフォールド回避", () => {
     it("相手upが汚い → 弱ローでもCALL", () => {
@@ -217,7 +596,7 @@ describe("decideRazzLv2", () => {
             downCards: [
               { rank: "A", suit: "c" } as Card,
               { rank: "2", suit: "c" } as Card,
-              { rank: "Q", suit: "d" } as Card, // 7thのdown
+              { rank: "Q", suit: "d" } as Card,
             ],
             upCards: [
               { rank: "K", suit: "h" } as Card,
@@ -230,7 +609,7 @@ describe("decideRazzLv2", () => {
             downCards: [
               { rank: "A", suit: "h" } as Card,
               { rank: "2", suit: "s" } as Card,
-              { rank: "9", suit: "d" } as Card, // 7thのdown
+              { rank: "9", suit: "d" } as Card,
             ],
             upCards: [
               { rank: "3", suit: "s" } as Card,
@@ -249,8 +628,95 @@ describe("decideRazzLv2", () => {
       };
 
       const action = decideRazzLv2(ctx);
-      // 相手upが汚い（K,Q,J,T）+ ヘッズアップ → CALL
       expect(action).toBe("CALL");
+    });
+
+    it("良いローでBET（バリュー）", () => {
+      const state = createTestState({
+        street: "7th",
+        currentBet: 0,
+        hands: {
+          0: {
+            downCards: [
+              { rank: "T", suit: "c" } as Card,
+              { rank: "J", suit: "c" } as Card,
+              { rank: "Q", suit: "d" } as Card,
+            ],
+            upCards: [
+              { rank: "K", suit: "h" } as Card,
+              { rank: "Q", suit: "d" } as Card,
+              { rank: "J", suit: "s" } as Card,
+              { rank: "T", suit: "c" } as Card,
+            ],
+          },
+          1: {
+            downCards: [
+              { rank: "A", suit: "h" } as Card,
+              { rank: "2", suit: "s" } as Card,
+              { rank: "4", suit: "d" } as Card,
+            ],
+            upCards: [
+              { rank: "3", suit: "s" } as Card,
+              { rank: "5", suit: "d" } as Card,
+              { rank: "6", suit: "h" } as Card,
+              { rank: "7", suit: "c" } as Card,
+            ],
+          },
+        },
+      });
+
+      const ctx: CpuDecisionContext = {
+        state,
+        seat: 1,
+        allowedActions: ["CHECK", "BET"],
+      };
+
+      const action = decideRazzLv2(ctx);
+      expect(action).toBe("BET");
+    });
+
+    it("相手upが良い＋自分がブリック多い → FOLD", () => {
+      const state = createTestState({
+        street: "7th",
+        currentBet: 80,
+        hands: {
+          0: {
+            downCards: [
+              { rank: "A", suit: "c" } as Card,
+              { rank: "2", suit: "c" } as Card,
+              { rank: "4", suit: "d" } as Card,
+            ],
+            upCards: [
+              { rank: "3", suit: "h" } as Card,
+              { rank: "5", suit: "d" } as Card,
+              { rank: "6", suit: "s" } as Card,
+              { rank: "7", suit: "c" } as Card,
+            ],
+          },
+          1: {
+            downCards: [
+              { rank: "T", suit: "h" } as Card,
+              { rank: "J", suit: "s" } as Card,
+              { rank: "Q", suit: "d" } as Card,
+            ],
+            upCards: [
+              { rank: "K", suit: "s" } as Card,
+              { rank: "9", suit: "d" } as Card,
+              { rank: "8", suit: "h" } as Card,
+              { rank: "A", suit: "c" } as Card,
+            ],
+          },
+        },
+      });
+
+      const ctx: CpuDecisionContext = {
+        state,
+        seat: 1,
+        allowedActions: ["CALL", "FOLD"],
+      };
+
+      const action = decideRazzLv2(ctx);
+      expect(["FOLD", "CALL"]).toContain(action);
     });
   });
 });
