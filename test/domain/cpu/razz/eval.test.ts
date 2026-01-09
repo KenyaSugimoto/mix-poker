@@ -188,16 +188,36 @@ describe("razz/eval", () => {
   describe("countBetterDoors", () => {
     it("自分5、相手A,2 → 2人", () => {
       const opponents = [
-        { seat: 0, active: true, up: [{ rank: "A", suit: "h" } as Card], downCount: 2 },
-        { seat: 1, active: true, up: [{ rank: "2", suit: "c" } as Card], downCount: 2 },
+        {
+          seat: 0,
+          active: true,
+          up: [{ rank: "A", suit: "h" } as Card],
+          downCount: 2,
+        },
+        {
+          seat: 1,
+          active: true,
+          up: [{ rank: "2", suit: "c" } as Card],
+          downCount: 2,
+        },
       ];
       expect(countBetterDoors("5", opponents)).toBe(2);
     });
 
     it("自分A、相手K,Q → 0人", () => {
       const opponents = [
-        { seat: 0, active: true, up: [{ rank: "K", suit: "h" } as Card], downCount: 2 },
-        { seat: 1, active: true, up: [{ rank: "Q", suit: "c" } as Card], downCount: 2 },
+        {
+          seat: 0,
+          active: true,
+          up: [{ rank: "K", suit: "h" } as Card],
+          downCount: 2,
+        },
+        {
+          seat: 1,
+          active: true,
+          up: [{ rank: "Q", suit: "c" } as Card],
+          downCount: 2,
+        },
       ];
       expect(countBetterDoors("A", opponents)).toBe(0);
     });
@@ -206,16 +226,36 @@ describe("razz/eval", () => {
   describe("allOppsHaveWorseDoor", () => {
     it("自分A、相手K,Q → true", () => {
       const opponents = [
-        { seat: 0, active: true, up: [{ rank: "K", suit: "h" } as Card], downCount: 2 },
-        { seat: 1, active: true, up: [{ rank: "Q", suit: "c" } as Card], downCount: 2 },
+        {
+          seat: 0,
+          active: true,
+          up: [{ rank: "K", suit: "h" } as Card],
+          downCount: 2,
+        },
+        {
+          seat: 1,
+          active: true,
+          up: [{ rank: "Q", suit: "c" } as Card],
+          downCount: 2,
+        },
       ];
       expect(allOppsHaveWorseDoor("A", opponents)).toBe(true);
     });
 
     it("自分5、相手3,K → false（3が良い）", () => {
       const opponents = [
-        { seat: 0, active: true, up: [{ rank: "3", suit: "h" } as Card], downCount: 2 },
-        { seat: 1, active: true, up: [{ rank: "K", suit: "c" } as Card], downCount: 2 },
+        {
+          seat: 0,
+          active: true,
+          up: [{ rank: "3", suit: "h" } as Card],
+          downCount: 2,
+        },
+        {
+          seat: 1,
+          active: true,
+          up: [{ rank: "K", suit: "c" } as Card],
+          downCount: 2,
+        },
       ];
       expect(allOppsHaveWorseDoor("5", opponents)).toBe(false);
     });
