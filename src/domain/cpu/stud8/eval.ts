@@ -88,7 +88,7 @@ export const classify3rdStud8 = (meCards3: Card[]): Quality3rdStud8 => {
   const pairRank = getPairRank(meCards3);
   const hasAce = vals.includes(1);
   const maxVal = Math.max(...vals);
-  const _minVal = Math.min(...vals);
+
 
   // Scoop3_Monster: HiもLoも両睨み
   // - A2x（x<=8）かつ3枚すべて別ランク
@@ -237,11 +237,9 @@ export const inferRoleNow = (cards: Card[]): PlayerRole => {
     rankCount.set(c.rank, (rankCount.get(c.rank) ?? 0) + 1);
   }
   let pairCount = 0;
-  let _highPair = false;
-  for (const [rank, count] of rankCount) {
+  for (const [, count] of rankCount) {
     if (count >= 2) {
       pairCount++;
-      if (lowValue(rank) >= 9) _highPair = true;
     }
   }
 
