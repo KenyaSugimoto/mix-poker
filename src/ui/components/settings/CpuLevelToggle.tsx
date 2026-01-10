@@ -5,7 +5,7 @@ import type { CpuLevel } from "../../../app/types";
 const CPU_LEVEL_DESCRIPTIONS: Record<CpuLevel, string> = {
   lv0: "CHECK/CALL優先（開発用）",
   lv1: "状況に応じた意思決定",
-  lv2: "ルールベースの強い戦略（Stud Hi専用）",
+  lv2: "ルールベースの強い戦略",
 };
 
 export const CpuLevelToggle: React.FC = () => {
