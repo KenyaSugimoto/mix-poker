@@ -17,7 +17,7 @@ export type CpuLevel = "lv0" | "lv1" | "lv2";
 export const runCpuTurn = (
   state: DealState,
   seat: number,
-  cpuLevel: CpuLevel = "lv1",
+  cpuLevel: CpuLevel = "lv2",
 ): { nextState: DealState; event: Event } | null => {
   // 終了チェック
   if (state.dealFinished) return null;
