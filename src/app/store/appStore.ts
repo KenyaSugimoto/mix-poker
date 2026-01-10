@@ -66,7 +66,7 @@ const INITIAL_UI: UiState = {
   screen: "SETUP",
   selectedDealId: null,
   displayUnit: "points",
-  cpuLevel: "lv1",
+  cpuLevel: "lv2",
 };
 
 const INITIAL_FULL_STORE: FullStore = {
