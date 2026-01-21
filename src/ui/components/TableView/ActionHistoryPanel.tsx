@@ -7,12 +7,14 @@ import type {
 } from "../../../domain/types";
 import { UI_STRINGS } from "../../constants/uiStrings";
 import { getActionLabel, PLAYER_ACTION_TYPES } from "../../utils/actionLabel";
+import { FavoriteIconButton } from "../play/FavoriteIconButton";
 
 interface ActionHistoryPanelProps {
   eventLog: Event[];
   seatOrder: PlayerId[];
   players: GamePlayer[];
   dealIndex: number;
+  dealId?: string;
 }
 
 // ストリートの日本語ラベル
@@ -27,6 +29,7 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
   seatOrder,
   players,
   dealIndex,
+  dealId,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -113,10 +116,11 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
 
   return (
     <div className="absolute top-4 right-4 z-20 w-56 max-h-52 rounded-lg border border-poker-gold/30 bg-poker-green/90 backdrop-blur-sm shadow-xl">
-      <div className="px-3 py-2 border-b border-white/10">
+      <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
         <h3 className="text-xs font-bold text-poker-gold">
           {UI_STRINGS.PLAY.ACTION_HISTORY_TITLE(dealIndex + 1)}
         </h3>
+        {dealId && <FavoriteIconButton dealId={dealId} size="sm" />}
       </div>
       <div
         ref={scrollRef}
