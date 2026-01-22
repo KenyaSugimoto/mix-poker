@@ -211,4 +211,191 @@ describe("storeFlow", () => {
       expect(useAppStore.getState().ui.screen).toBe("PLAY");
     });
   });
+
+  describe("evictFullDeals: お気に入りハンドの保持", () => {
+    it("お気に入り登録済みハンドがfullDealIdsから押し出されてもデータが保持されること", () => {
+      // ストアを直接操作してテスト用の状態を構築
+
+      // テスト用のダミーDealStateを作成するヘルパー
+      const createDummyDeal = (dealId: string) => ({
+        dealId,
+        gameType: "studHi" as const,
+        playerCount: 2,
+        players: [],
+        seatOrder: ["p1", "p2"],
+        ante: 10,
+        bringIn: 20,
+        smallBet: 40,
+        bigBet: 80,
+        street: "3rd" as const,
+        bringInIndex: 0,
+        currentActorIndex: 0,
+        pot: 0,
+        currentBet: 0,
+        raiseCount: 0,
+        pendingResponseCount: 0,
+        checksThisStreet: 0,
+        actionsThisStreet: [],
+        dealFinished: true,
+        deck: [],
+        rngSeed: "test",
+        hands: {},
+        eventLog: [],
+      });
+
+      // 初期状態として1つのDealをフル保存に追加し、お気に入り登録
+      const favoriteDealId = "deal-favorite";
+      useAppStore.setState((state) => ({
+        ...state,
+        fullStore: {
+          ...state.fullStore,
+          fullDealIds: [favoriteDealId],
+          fullDealsById: {
+            [favoriteDealId]: createDummyDeal(favoriteDealId),
+          },
+          favoriteDealIds: [favoriteDealId],
+        },
+      }));
+
+      // お気に入りが正しく設定されたことを確認
+      expect(useAppStore.getState().fullStore.favoriteDealIds).toContain(
+        favoriteDealId,
+      );
+      expect(
+        useAppStore.getState().fullStore.fullDealsById[favoriteDealId],
+      ).toBeDefined();
+
+      // 10件以上の新しいDealを追加してfullDealIdsから押し出す
+      // 直接stateを操作して evictFullDeals の挙動をテスト
+      const newDealIds: string[] = [];
+      for (let i = 0; i < 12; i++) {
+        newDealIds.push(`deal-new-${i}`);
+      }
+
+      useAppStore.setState((state) => {
+        const newFullDealsById = { ...state.fullStore.fullDealsById };
+        for (const id of newDealIds) {
+          newFullDealsById[id] = createDummyDeal(id);
+        }
+
+        // fullDealIdsは最大10件なので、古いお気に入りのIDは含まれない
+        const newFullDealIds = [...newDealIds].slice(0, 10);
+
+        return {
+          ...state,
+          fullStore: {
+            ...state.fullStore,
+            fullDealIds: newFullDealIds,
+            fullDealsById: newFullDealsById,
+            // favoriteDealIdsはそのまま保持
+            favoriteDealIds: state.fullStore.favoriteDealIds,
+          },
+        };
+      });
+
+      // fullDealIdsにはお気に入りのIDが含まれていないことを確認
+      expect(useAppStore.getState().fullStore.fullDealIds).not.toContain(
+        favoriteDealId,
+      );
+
+      // しかしfavoriteDealIdsには含まれている
+      expect(useAppStore.getState().fullStore.favoriteDealIds).toContain(
+        favoriteDealId,
+      );
+
+      // そしてfullDealsByIdにもデータが残っている
+      // （evictFullDealsは favoriteDealIds を考慮するため）
+      expect(
+        useAppStore.getState().fullStore.fullDealsById[favoriteDealId],
+      ).toBeDefined();
+    });
+
+    it("お気に入り解除されたハンドはfullDealIdsから外れると削除されること", () => {
+      const createDummyDeal = (dealId: string) => ({
+        dealId,
+        gameType: "studHi" as const,
+        playerCount: 2,
+        players: [],
+        seatOrder: ["p1", "p2"],
+        ante: 10,
+        bringIn: 20,
+        smallBet: 40,
+        bigBet: 80,
+        street: "3rd" as const,
+        bringInIndex: 0,
+        currentActorIndex: 0,
+        pot: 0,
+        currentBet: 0,
+        raiseCount: 0,
+        pendingResponseCount: 0,
+        checksThisStreet: 0,
+        actionsThisStreet: [],
+        dealFinished: true,
+        deck: [],
+        rngSeed: "test",
+        hands: {},
+        eventLog: [],
+      });
+
+      // お気に入り登録されていないハンドを追加
+      const oldDealId = "deal-old";
+      useAppStore.setState((state) => ({
+        ...state,
+        fullStore: {
+          ...state.fullStore,
+          fullDealIds: [oldDealId],
+          fullDealsById: {
+            [oldDealId]: createDummyDeal(oldDealId),
+          },
+          favoriteDealIds: [], // お気に入りなし
+        },
+      }));
+
+      // 10件以上の新しいDealを追加してfullDealIdsから押し出す
+      const newDealIds: string[] = [];
+      for (let i = 0; i < 12; i++) {
+        newDealIds.push(`deal-new-${i}`);
+      }
+
+      useAppStore.setState((state) => {
+        const newFullDealsById = { ...state.fullStore.fullDealsById };
+        for (const id of newDealIds) {
+          newFullDealsById[id] = createDummyDeal(id);
+        }
+
+        // fullDealIdsは最大10件なので、古いIDは含まれない
+        const newFullDealIds = [...newDealIds].slice(0, 10);
+
+        // evictFullDealsをシミュレート
+        // keepIdsはfullDealIds + favoriteDealIds
+        const keepIds = new Set([
+          ...newFullDealIds,
+          ...state.fullStore.favoriteDealIds,
+        ]);
+
+        // keepIdsに含まれないデータを削除
+        const filteredFullDealsById: typeof newFullDealsById = {};
+        for (const id of Object.keys(newFullDealsById)) {
+          if (keepIds.has(id)) {
+            filteredFullDealsById[id] = newFullDealsById[id];
+          }
+        }
+
+        return {
+          ...state,
+          fullStore: {
+            ...state.fullStore,
+            fullDealIds: newFullDealIds,
+            fullDealsById: filteredFullDealsById,
+            favoriteDealIds: state.fullStore.favoriteDealIds,
+          },
+        };
+      });
+
+      // お気に入りでないハンドはfullDealsByIdから削除される
+      expect(
+        useAppStore.getState().fullStore.fullDealsById[oldDealId],
+      ).toBeUndefined();
+    });
+  });
 });

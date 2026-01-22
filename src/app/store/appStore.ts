@@ -29,21 +29,20 @@ import {
 const MAX_FULL_RECENT = 10;
 
 /**
- * フル保存のeviction処理（fullDealIdsに含まれないものを削除）
+ * フル保存のeviction処理（fullDealIds・favoriteDealIdsに含まれないものを削除）
  */
 const evictFullDeals = (state: AppState): void => {
-  const keepIds = new Set<string>(state.fullStore.fullDealIds);
+  // 直近10件 + お気に入り登録済みのIDを保持対象に含める
+  const keepIds = new Set<string>([
+    ...state.fullStore.fullDealIds,
+    ...state.fullStore.favoriteDealIds,
+  ]);
 
   for (const id of Object.keys(state.fullStore.fullDealsById)) {
     if (!keepIds.has(id)) {
       delete state.fullStore.fullDealsById[id];
     }
   }
-
-  // お気に入りも、フルが存在しないものは削除
-  state.fullStore.favoriteDealIds = state.fullStore.favoriteDealIds.filter(
-    (id) => keepIds.has(id),
-  );
 };
 
 export interface AppActions {
