@@ -52,6 +52,7 @@ export interface AppActions {
   dispatch: (event: Event) => void;
   processCpuTurns: () => void;
   resetAll: () => void;
+  resetGame: () => void;
   setScreen: (screen: UiState["screen"]) => void;
   setSelectedDealId: (dealId: string | null) => void;
   toggleFavoriteDeal: (dealId: string) => void;
@@ -115,8 +116,6 @@ const storeCreator = (set: any, get: any): AppStore => ({
       produce((state: AppState) => {
         state.game = game;
         state.ui.screen = "PLAY";
-        // 新しいゲームなのでFullStoreはキープしつつ、Gameはリセット
-        // ※要件次第だが、ここでは簡易的に上書き
       }),
     );
   },
@@ -459,6 +458,16 @@ const storeCreator = (set: any, get: any): AppStore => ({
   resetAll: () => {
     set(DEFAULT_STATE);
     localStorage.removeItem(STORAGE_KEY);
+  },
+
+  resetGame: () => {
+    set(
+      produce((state: AppState) => {
+        state.game = null;
+        state.ui.screen = "SETUP";
+      }),
+    );
+    saveAppState(get());
   },
 
   setScreen: (screen) => {

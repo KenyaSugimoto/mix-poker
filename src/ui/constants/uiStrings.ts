@@ -66,4 +66,8 @@ export const UI_STRINGS = {
     BUTTON_EXECUTE: "削除を実行",
     BUTTON_CANCEL: "キャンセル",
   },
+  MENU: {
+    EXIT_GAME: "退出",
+    CONFIRM_EXIT_GAME: "現在のゲームを終了して設定画面に戻りますか？",
+  },
 } as const;
