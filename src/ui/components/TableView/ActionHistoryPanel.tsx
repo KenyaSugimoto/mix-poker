@@ -15,6 +15,7 @@ interface ActionHistoryPanelProps {
   players: GamePlayer[];
   dealIndex: number;
   dealId?: string;
+  isDealFinished: boolean;
 }
 
 // ストリートの日本語ラベル
@@ -30,6 +31,7 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
   players,
   dealIndex,
   dealId,
+  isDealFinished,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -120,7 +122,9 @@ export const ActionHistoryPanel: React.FC<ActionHistoryPanelProps> = ({
         <h3 className="text-xs font-bold text-poker-gold">
           {UI_STRINGS.PLAY.ACTION_HISTORY_TITLE(dealIndex + 1)}
         </h3>
-        {dealId && <FavoriteIconButton dealId={dealId} size="sm" />}
+        {dealId && isDealFinished && (
+          <FavoriteIconButton dealId={dealId} size="sm" />
+        )}
       </div>
       <div
         ref={scrollRef}
