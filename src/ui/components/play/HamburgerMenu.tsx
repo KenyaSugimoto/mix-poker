@@ -78,9 +78,7 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
               type="button"
               onClick={() => {
                 if (
-                  window.confirm(
-                    "現在のゲームを終了して設定画面に戻りますか？",
-                  )
+                  window.confirm("現在のゲームを終了して設定画面に戻りますか？")
                 ) {
                   setIsOpen(false);
                   onExitGameClick();
