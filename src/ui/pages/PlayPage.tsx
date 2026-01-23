@@ -29,6 +29,7 @@ export const PlayPage: React.FC = () => {
   const game = useAppStore((state) => state.game);
   const fullStore = useAppStore((state) => state.fullStore);
   const setScreen = useAppStore((state) => state.setScreen);
+  const resetGame = useAppStore((state) => state.resetGame);
 
   if (!game) {
     return (
@@ -101,6 +102,7 @@ export const PlayPage: React.FC = () => {
         <HamburgerMenu
           onHistoryClick={() => setScreen("HISTORY")}
           onSettingsClick={() => setScreen("SETTINGS")}
+          onExitGameClick={resetGame}
         />
       </div>
       {/* 2行レイアウト: 1行目TableView、2行目ActionPanel */}

@@ -4,11 +4,13 @@ import { useState } from "react";
 interface HamburgerMenuProps {
   onHistoryClick: () => void;
   onSettingsClick: () => void;
+  onExitGameClick: () => void;
 }
 
 export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   onHistoryClick,
   onSettingsClick,
+  onExitGameClick,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -68,9 +70,25 @@ export const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
                 setIsOpen(false);
                 onSettingsClick();
               }}
-              className="w-full text-left px-4 py-2 hover:bg-muted/80 transition-colors rounded-b-lg"
+              className="w-full text-left px-4 py-2 hover:bg-muted/80 transition-colors"
             >
               設定
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "現在のゲームを終了して設定画面に戻りますか？",
+                  )
+                ) {
+                  setIsOpen(false);
+                  onExitGameClick();
+                }
+              }}
+              className="w-full text-left px-4 py-2 hover:bg-muted/80 transition-colors rounded-b-lg text-destructive"
+            >
+              退出
             </button>
           </div>
         </>
