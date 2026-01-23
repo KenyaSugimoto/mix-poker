@@ -105,6 +105,7 @@ export const TableView: React.FC<TableViewProps> = ({
         players={game.players}
         dealIndex={dealIndex}
         dealId={deal.dealId}
+        isDealFinished={deal.dealFinished}
       />
       {/* テーブル中央のポット表示（ショーダウン時は非表示） */}
       {!deal.dealFinished && (
