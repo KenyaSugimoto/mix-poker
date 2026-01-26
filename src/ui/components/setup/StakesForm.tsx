@@ -52,13 +52,13 @@ export const StakesForm: React.FC<Props> = ({ stakes, onChange }) => {
         </div>
         <div className="bg-muted/30 p-2 rounded border border-border/50 text-center">
           <div className="text-xs text-muted-foreground font-medium mb-1 whitespace-nowrap">
-            SB
+            Small Bet
           </div>
           <div className="text-lg font-mono font-medium">{stakes.smallBet}</div>
         </div>
         <div className="bg-muted/30 p-2 rounded border border-border/50 text-center">
           <div className="text-xs text-muted-foreground font-medium mb-1 whitespace-nowrap">
-            BB
+            Big Bet
           </div>
           <div className="text-lg font-mono font-medium">{stakes.bigBet}</div>
         </div>
