@@ -88,8 +88,7 @@ export interface DealBoardEvent extends BaseEvent {
 
 ### 2.2 既存イベントの挙動変更
 - **`DEAL_INIT`**:
-    - `dealCard2nd` (Hole Cards) 相当の処理が必要（Studは3枚、Hold'emは2枚）。
-    - イベント名は `DEAL_HOLE_CARDS` のような汎用名にするか、既存の `DEAL_CARDS_3RD` とは別に `DEAL_CARDS_PREFLOP` を追加する。
+    - `dealCards3rd` (Hole Cards) 相当の処理が必要（Studは3枚、Hold'emは2枚）。
     - **案**: `DEAL_CARDS_PREFLOP` を追加し、各プレイヤーに2枚配る。
 
 - **`STREET_ADVANCE`**:
