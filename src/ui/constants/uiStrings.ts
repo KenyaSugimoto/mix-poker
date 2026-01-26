@@ -45,7 +45,7 @@ export const UI_STRINGS = {
     SEAT_DEFAULT: (idx: number) => `Seat ${idx}`,
   },
   SETUP: {
-    TITLE: "Mix Poker MVP",
+    TITLE: "Mix Poker",
     SUBTITLE: "Setup your game",
     START_BUTTON: "Start Game",
   },
