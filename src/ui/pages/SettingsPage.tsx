@@ -1,6 +1,5 @@
 import type React from "react";
 import { useAppStore } from "../../app/store/appStore";
-// 開発用のため非表示: import { CpuLevelToggle } from "../components/settings/CpuLevelToggle";
 import { DangerZoneResetAll } from "../components/settings/DangerZoneResetAll";
 
 export const SettingsPage: React.FC = () => {
@@ -29,13 +28,6 @@ export const SettingsPage: React.FC = () => {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="max-w-2xl mx-auto space-y-8">
-          {/* 開発用のため非表示 */}
-          {/* CPU Settings */}
-          {/* <section>
-            <h2 className="text-xl font-semibold mb-4">CPU設定</h2>
-            <CpuLevelToggle />
-          </section> */}
-
           {/* Data Info */}
           <section>
             <h2 className="text-xl font-semibold mb-4">データ情報</h2>
