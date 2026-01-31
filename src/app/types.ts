@@ -3,7 +3,7 @@ import type { DealState, GameState } from "../domain/types";
 export type Screen = "SETUP" | "PLAY" | "HISTORY" | "SETTINGS";
 
 /** CPU戦略レベル */
-export type CpuLevel = "lv0" | "lv1" | "lv2";
+export type CpuLevel = "lv2";
 
 export interface UiState {
   screen: Screen;
