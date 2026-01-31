@@ -38,72 +38,40 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #09090b;
+  --background: #09090b;
+  --foreground: #fafafa;
 
   /* Poker App Specific Palette (Fixed) */
   --poker-base: #1c1c1e;
   --poker-green: #064e3b;
   --poker-gold: #fbbf24;
 
-  --card: #ffffff;
-  --card-foreground: #09090b;
+  --card: #09090b;
+  --card-foreground: #fafafa;
 
-  --popover: #ffffff;
-  --popover-foreground: #09090b;
+  --popover: #09090b;
+  --popover-foreground: #fafafa;
 
-  --primary: #064e3b; /* Using Design Rule Deep Green for Primary */
+  --primary: #064e3b;
   --primary-foreground: #fafafa;
 
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
 
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
 
-  --accent: #fbbf24; /* Using Design Rule Gold for Accent */
+  --accent: #fbbf24;
   --accent-foreground: #18181b;
 
-  --destructive: #ef4444;
+  --destructive: #7f1d1d;
   --destructive-foreground: #fafafa;
 
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #18181b;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #d4d4d8;
 
   --radius: 0.5rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --foreground: #fafafa;
-
-    --card: #09090b;
-    --card-foreground: #fafafa;
-
-    --popover: #09090b;
-    --popover-foreground: #fafafa;
-
-    --primary: #064e3b;
-    --primary-foreground: #fafafa;
-
-    --secondary: #27272a;
-    --secondary-foreground: #fafafa;
-
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
-
-    --accent: #fbbf24;
-    --accent-foreground: #18181b;
-
-    --destructive: #7f1d1d;
-    --destructive-foreground: #fafafa;
-
-    --border: #27272a;
-    --input: #27272a;
-    --ring: #d4d4d8;
-  }
 }
 
 body {
